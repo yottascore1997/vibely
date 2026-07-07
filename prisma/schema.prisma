@@ -1,0 +1,240 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum InterestedIn {
+  MEN
+  WOMEN
+  EVERYONE
+}
+
+enum LookingFor {
+  LONG_TERM
+  CASUAL
+  FRIENDSHIP
+  MARRIAGE
+  NETWORKING
+}
+
+enum SwipeAction {
+  LIKE
+  PASS
+  SUPER_LIKE
+  WAVE
+}
+
+enum SocialEnergy {
+  LESSGO
+  MAYBE
+  OFF_GRID
+}
+
+enum HangoutStatus {
+  OPEN
+  FULL
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  profile       Profile?
+  sentSwipes    Swipe[]       @relation("SentSwipes")
+  receivedSwipes Swipe[]      @relation("ReceivedSwipes")
+  matchesAsUser1 Match[]       @relation("MatchUser1")
+  matchesAsUser2 Match[]       @relation("MatchUser2")
+  sentVibes     Vibe[]        @relation("SentVibes")
+  receivedVibes Vibe[]        @relation("ReceivedVibes")
+  hangouts      Hangout[]     @relation("HangoutCreator")
+  participants  Participant[]
+  socialStatus  SocialStatus?
+  notifications Notification[]
+}
+
+model Profile {
+  id                String         @id @default(cuid())
+  userId            String         @unique
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName         String?
+  bio               String?        @db.Text
+  age               Int?
+  dateOfBirth       DateTime?
+  gender            Gender?
+  interestedIn      InterestedIn?
+  pronouns          String?
+  city              String?
+  country           String?
+  latitude          Float?
+  longitude         Float?
+  jobTitle          String?
+  company           String?
+  education         String?
+  college           String?
+  height            String?
+  languages         String?
+  religion          String?
+  smoking           String?
+  drinking          String?
+  workout           String?
+  diet              String?
+  pets              String?
+  zodiac            String?
+  minAge            Int?           @default(18)
+  maxAge            Int?           @default(35)
+  maxDistance       Int?           @default(25)
+  genderPreference  String?
+  lookingFor        String?
+  onboardingDone    Boolean        @default(false)
+  isVerified        Boolean        @default(false)
+  isOnline          Boolean        @default(false)
+  isPremium         Boolean        @default(false)
+  diamonds          Int            @default(100)
+  avatarUrl         String?
+  photos            Photo[]
+  interests         UserInterest[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  url       String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Interest {
+  id       String         @id @default(cuid())
+  name     String         @unique
+  icon     String?
+  color    String?
+  users    UserInterest[]
+}
+
+model UserInterest {
+  id         String   @id @default(cuid())
+  profileId  String
+  interestId String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  interest   Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, interestId])
+}
+
+model Swipe {
+  id         String      @id @default(cuid())
+  senderId   String
+  receiverId String
+  action     SwipeAction
+  sender     User        @relation("SentSwipes", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User        @relation("ReceivedSwipes", fields: [receiverId], references: [id], onDelete: Cascade)
+  createdAt  DateTime    @default(now())
+
+  @@unique([senderId, receiverId])
+}
+
+model Match {
+  id        String   @id @default(cuid())
+  user1Id   String
+  user2Id   String
+  user1     User     @relation("MatchUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2     User     @relation("MatchUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+  matchedAt DateTime @default(now())
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
+}
+
+model Vibe {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  vibeType   String
+  message    String?
+  sender     User     @relation("SentVibes", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("ReceivedVibes", fields: [receiverId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([receiverId])
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  icon      String?
+  color     String?
+  peopleCount Int    @default(0)
+  hangouts  Hangout[]
+}
+
+model Hangout {
+  id              String        @id @default(cuid())
+  title           String
+  description     String?       @db.Text
+  creatorId       String
+  creator         User          @relation("HangoutCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  activityId      String?
+  activity        Activity?     @relation(fields: [activityId], references: [id])
+  location        String?
+  latitude        Float?
+  longitude       Float?
+  distance        Float?
+  scheduledAt     DateTime
+  maxParticipants Int           @default(8)
+  status          HangoutStatus @default(OPEN)
+  imageUrl        String?
+  participants    Participant[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Participant {
+  id        String   @id @default(cuid())
+  hangoutId String
+  userId    String
+  hangout   Hangout  @relation(fields: [hangoutId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime @default(now())
+
+  @@unique([hangoutId, userId])
+}
+
+model SocialStatus {
+  id        String       @id @default(cuid())
+  userId    String       @unique
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  energy    SocialEnergy @default(MAYBE)
+  freeNow   Boolean      @default(false)
+  freeUntil DateTime?
+  updatedAt DateTime     @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
