@@ -1,5 +1,6 @@
-import { success } from "@/lib/api-response";
-import { mockProfiles } from "@/lib/mock-data";
+import { NextRequest } from "next/server";
+import { success, error } from "@/lib/api-response";
+import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { estimateDistanceKm } from "@/lib/match-utils";
 
@@ -51,12 +52,13 @@ function formatProfile(
   };
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const mode = searchParams.get("mode") || "dating";
-  const userId = searchParams.get("userId");
   const city = searchParams.get("city");
   const limit = Number(searchParams.get("limit") || 20);
+  const auth = getAuthUser(request);
+  const userId = auth?.userId ?? searchParams.get("userId");
 
   try {
     let myProfile: {
@@ -64,17 +66,37 @@ export async function GET(request: Request) {
       latitude: number | null;
       longitude: number | null;
       maxDistance: number | null;
+      minAge: number | null;
+      maxAge: number | null;
+      genderPreference: string | null;
     } | null = null;
 
     if (userId) {
       myProfile = await prisma.profile.findUnique({
         where: { userId },
-        select: { city: true, latitude: true, longitude: true, maxDistance: true },
+        select: {
+          city: true,
+          latitude: true,
+          longitude: true,
+          maxDistance: true,
+          minAge: true,
+          maxAge: true,
+          genderPreference: true,
+        },
       });
     }
 
     const myCity = city || myProfile?.city;
     const maxDistance = myProfile?.maxDistance ?? 25;
+    const minAge = myProfile?.minAge ?? 18;
+    const maxAge = myProfile?.maxAge ?? 60;
+    const genderPref = (myProfile?.genderPreference || "").toUpperCase();
+    const genderFilter =
+      genderPref === "MEN" || genderPref === "MALE"
+        ? { gender: "MALE" as const }
+        : genderPref === "WOMEN" || genderPref === "FEMALE"
+          ? { gender: "FEMALE" as const }
+          : {};
 
     const swipedIds = userId
       ? (
@@ -96,11 +118,40 @@ export async function GET(request: Request) {
 
     const excludeIds = [...new Set([...(userId ? [userId] : []), ...swipedIds, ...matchedIds])];
 
+    // lookingFor is JSON-stringified array e.g. ["FRIENDSHIP","CASUAL"]
+    const lookingForClause =
+      mode === "friends"
+        ? {
+            OR: [
+              { lookingFor: { contains: "FRIEND" } },
+              { lookingFor: { contains: "NETWORK" } },
+              { lookingFor: null },
+            ],
+          }
+        : mode === "dating"
+          ? {
+              OR: [
+                { lookingFor: { contains: "LONG_TERM" } },
+                { lookingFor: { contains: "CASUAL" } },
+                { lookingFor: { contains: "MARRIAGE" } },
+                { lookingFor: null },
+              ],
+            }
+          : null;
+
+    const ageClause = {
+      OR: [{ age: null }, { age: { gte: minAge, lte: maxAge } }],
+    };
+
+    const baseWhere = {
+      userId: { notIn: excludeIds },
+      ...(myCity ? { city: myCity } : {}),
+      ...genderFilter,
+      AND: lookingForClause ? [lookingForClause, ageClause] : [ageClause],
+    };
+
     const profiles = await prisma.profile.findMany({
-      where: {
-        userId: { notIn: excludeIds },
-        ...(myCity ? { city: myCity } : {}),
-      },
+      where: baseWhere,
       take: limit * 2,
       include: {
         user: { select: { id: true, name: true } },
@@ -119,7 +170,11 @@ export async function GET(request: Request) {
 
     if (formatted.length === 0 && myCity) {
       const nearby = await prisma.profile.findMany({
-        where: { userId: { notIn: excludeIds } },
+        where: {
+          userId: { notIn: excludeIds },
+          ...genderFilter,
+          AND: [ageClause],
+        },
         take: limit,
         include: {
           user: { select: { id: true, name: true } },
@@ -135,21 +190,10 @@ export async function GET(request: Request) {
     }
 
     if (formatted.length > 0) return success(formatted);
-  } catch {
-    // fall through to mock
+  } catch (err) {
+    console.error("Fetch profiles error:", err);
+    return error("Failed to fetch profiles", 500);
   }
 
-  const myCity = city || "Nagpur";
-  const filtered = mockProfiles
-    .filter((p) => !userId || p.id !== userId)
-    .map((p) => ({
-      ...p,
-      distance: estimateDistanceKm(myCity, p.city),
-      mode,
-    }))
-    .filter((p) => p.city?.toLowerCase() === myCity.toLowerCase() || p.distance <= 25)
-    .sort((a, b) => a.distance - b.distance)
-    .slice(0, limit);
-
-  return success(filtered.length > 0 ? filtered : mockProfiles.slice(0, limit).map((p) => ({ ...p, mode })));
+  return success([]);
 }

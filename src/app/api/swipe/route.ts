@@ -1,13 +1,20 @@
+import { NextRequest } from "next/server";
 import { success, error } from "@/lib/api-response";
+import { getAuthUser, unauthorized } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { pairUserIds } from "@/lib/match-utils";
 
-export async function POST(request: Request) {
-  const body = await request.json();
-  const { senderId, receiverId, action = "PASS" } = body;
+export async function POST(request: NextRequest) {
+  const auth = getAuthUser(request);
+  if (!auth) return unauthorized();
+  const userId = auth.userId;
 
-  if (!senderId || !receiverId || !action) {
-    return error("senderId, receiverId and action are required");
+  const body = await request.json();
+  const { receiverId, action = "PASS" } = body;
+  const senderId = userId;
+
+  if (!receiverId || !action) {
+    return error("receiverId and action are required");
   }
 
   if (senderId === receiverId) return error("Cannot swipe on yourself");
@@ -43,8 +50,8 @@ export async function POST(request: Request) {
     }
 
     return success({ swipe, isMatch, match });
-  } catch {
-    const isMatch = (action === "LIKE" || action === "SUPER_LIKE") && Math.random() > 0.55;
-    return success({ isMatch, demo: true });
+  } catch (err) {
+    console.error("Swipe error:", err);
+    return error("Failed to process swipe", 500);
   }
 }

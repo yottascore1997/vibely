@@ -58,6 +58,8 @@ export async function POST(request: NextRequest) {
       maxDistance: body.maxDistance ? Number(body.maxDistance) : undefined,
       genderPreference: body.genderPreference || undefined,
       lookingFor: body.lookingFor ? JSON.stringify(body.lookingFor) : undefined,
+      avatarUrl: body.avatarUrl || undefined,
+      city: body.city || undefined,
       onboardingDone: true,
     };
 

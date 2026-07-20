@@ -1,13 +1,12 @@
-import { success } from "@/lib/api-response";
-import { mockActivities } from "@/lib/mock-data";
+import { success, error } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
     const activities = await prisma.activity.findMany({ orderBy: { peopleCount: "desc" } });
-    if (activities.length > 0) return success(activities);
-  } catch {
-    // use mock
+    return success(activities);
+  } catch (err) {
+    console.error("Fetch activities error:", err);
+    return error("Failed to fetch activities", 500);
   }
-  return success(mockActivities);
 }

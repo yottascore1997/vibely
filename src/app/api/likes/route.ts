@@ -1,12 +1,13 @@
-import { success, error } from "@/lib/api-response";
+import { NextRequest } from "next/server";
+import { success } from "@/lib/api-response";
+import { getAuthUser, unauthorized } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { estimateDistanceKm } from "@/lib/match-utils";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId");
-
-  if (!userId) return error("userId is required");
+export async function GET(request: NextRequest) {
+  const auth = getAuthUser(request);
+  if (!auth) return unauthorized();
+  const userId = auth.userId;
 
   try {
     const me = await prisma.profile.findUnique({ where: { userId }, select: { city: true } });

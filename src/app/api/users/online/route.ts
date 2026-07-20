@@ -1,5 +1,4 @@
-import { success } from "@/lib/api-response";
-import { mockOnlineUsers } from "@/lib/mock-data";
+import { success, error } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -20,9 +19,10 @@ export async function GET() {
         }))
       );
     }
-  } catch {
-    // use mock
+  } catch (err) {
+    console.error("Fetch online users error:", err);
+    return error("Failed to fetch online users", 500);
   }
 
-  return success({ users: mockOnlineUsers, count: 128 });
+  return success([]);
 }

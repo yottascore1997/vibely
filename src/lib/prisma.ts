@@ -12,6 +12,7 @@ function createPrismaClient() {
     database: process.env.DATABASE_NAME || "vibematch",
     connectionLimit: 10,
     connectTimeout: 5000,
+    allowPublicKeyRetrieval: true,
   });
 
   return new PrismaClient({

@@ -1,63 +1,61 @@
-import { PrismaClient } from "@prisma/client";
+import "dotenv/config";
+import { prisma } from "../src/lib/prisma";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
-
 async function main() {
+  // 1. Clear database completely
+  console.log("Clearing database...");
+  await prisma.notification.deleteMany();
+  await prisma.jarItem.deleteMany();
+  await prisma.participant.deleteMany();
+  await prisma.hangout.deleteMany();
+  await prisma.socialStatus.deleteMany();
+  await prisma.vibe.deleteMany();
+  await prisma.match.deleteMany();
+  await prisma.swipe.deleteMany();
+  await prisma.userInterest.deleteMany();
+  await prisma.photo.deleteMany();
+  await prisma.profile.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.interest.deleteMany();
+  await prisma.activity.deleteMany();
+
+  // 2. Create seed interests & activities
   const interests = [
     { name: "Coffee", icon: "cafe", color: "#8B5E3C" },
     { name: "Travel", icon: "airplane", color: "#3B82F6" },
     { name: "Music", icon: "musical-notes", color: "#8B5CF6" },
-    { name: "Photography", icon: "camera", color: "#10B981" },
-    { name: "Cricket", icon: "baseball", color: "#22C55E" },
-    { name: "Gym", icon: "barbell", color: "#EF4444" },
-    { name: "Movie", icon: "film", color: "#6366F1" },
-    { name: "Food", icon: "pizza", color: "#F97316" },
   ];
-
   for (const interest of interests) {
-    await prisma.interest.upsert({
-      where: { name: interest.name },
-      update: interest,
-      create: interest,
-    });
+    await prisma.interest.create({ data: interest });
   }
 
   const activities = [
-    { name: "Coffee", icon: "cafe", color: "#8B5E3C", peopleCount: 12 },
-    { name: "Food", icon: "pizza", color: "#F97316", peopleCount: 8 },
-    { name: "Movie", icon: "film", color: "#6366F1", peopleCount: 15 },
-    { name: "Sports", icon: "tennisball", color: "#22C55E", peopleCount: 6 },
-    { name: "Bike Ride", icon: "bicycle", color: "#3B82F6", peopleCount: 4 },
+    { name: "Coffee", icon: "cafe", color: "#8B5E3C", peopleCount: 0 },
+    { name: "Food", icon: "pizza", color: "#F97316", peopleCount: 0 },
   ];
-
   for (const activity of activities) {
-    await prisma.activity.upsert({
-      where: { name: activity.name },
-      update: activity,
-      create: activity,
-    });
+    await prisma.activity.create({ data: activity });
   }
 
-  const passwordHash = await bcrypt.hash("password123", 10);
+  // 3. Create users
+  const passwordHash = await bcrypt.hash("Mayur12@!", 10);
 
   const users = [
     {
-      email: "riya@example.com",
-      name: "Riya Sharma",
+      email: "mayur@example.com",
+      name: "Mayur",
       profile: {
-        bio: "Looking for someone who's up for good conversations, spontaneous plans and creating amazing memories! ✨",
-        age: 24,
-        gender: "FEMALE" as const,
-        city: "Pune",
+        bio: "Building cool apps and looking for fun hangouts!",
+        age: 25,
+        gender: "MALE" as const,
+        city: "Nagpur",
         country: "India",
-        jobTitle: "Designer",
-        company: "Creatix Studios",
-        education: "Symbiosis College, Pune",
         isVerified: true,
         isOnline: true,
-        avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop",
-        interests: ["Coffee", "Travel", "Music", "Photography"],
+        isPremium: true,
+        avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop",
+        interests: ["Coffee"],
       },
     },
     {
@@ -69,38 +67,19 @@ async function main() {
         gender: "FEMALE" as const,
         city: "Nagpur",
         country: "India",
-        jobTitle: "Marketing",
-        company: "Startup Hub",
-        education: "NIT Nagpur",
         isVerified: true,
         isOnline: true,
         avatarUrl: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=800&fit=crop",
-        interests: ["Coffee", "Music", "Travel"],
-      },
-    },
-    {
-      email: "mayur@example.com",
-      name: "Mayur",
-      profile: {
-        bio: "Building cool apps and looking for fun hangouts!",
-        age: 25,
-        gender: "MALE" as const,
-        city: "Nagpur",
-        country: "India",
-        isVerified: false,
-        isOnline: true,
-        isPremium: true,
-        avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop",
-        interests: ["Coffee", "Cricket", "Movie"],
+        interests: ["Coffee", "Music"],
       },
     },
   ];
 
+  const createdUsers: Record<string, string> = {};
+
   for (const userData of users) {
-    const user = await prisma.user.upsert({
-      where: { email: userData.email },
-      update: {},
-      create: {
+    const user = await prisma.user.create({
+      data: {
         email: userData.email,
         name: userData.name,
         passwordHash,
@@ -111,9 +90,6 @@ async function main() {
             gender: userData.profile.gender,
             city: userData.profile.city,
             country: userData.profile.country,
-            jobTitle: userData.profile.jobTitle,
-            company: userData.profile.company,
-            education: userData.profile.education,
             isVerified: userData.profile.isVerified,
             isOnline: userData.profile.isOnline,
             isPremium: userData.profile.isPremium || false,
@@ -134,24 +110,95 @@ async function main() {
         socialStatus: {
           create: { energy: "LESSGO", freeNow: true },
         },
+        jarItems: {
+          create: userData.name === "Mayur" ? [
+            {
+              title: "First Coffee Vibe",
+              description: "Sent Sneha a coffee vibe to break the ice! ☕",
+              type: "VIBE",
+              meta: "Sneha • Coffee ☕",
+              imageUrl: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500&fit=crop",
+            },
+            {
+              title: "Pizza Hangout at Sitabuldi",
+              description: "Joined a spontaneous group hangout for Pizza! 🍕 Great conversations.",
+              type: "PLAN",
+              meta: "Group Hangout • Pizza 🍕",
+              imageUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&fit=crop",
+            },
+            {
+              title: "Vibe Match Streak!",
+              description: "Talking for 7 days straight! Level up 🔥",
+              type: "STREAK",
+              meta: "7 Days Streak 🔥",
+              imageUrl: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=500&fit=crop",
+            },
+          ] : [
+            {
+              title: "Vibe Match Streak!",
+              description: "Talking for 7 days straight! Level up 🔥",
+              type: "STREAK",
+              meta: "7 Days Streak 🔥",
+              imageUrl: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=500&fit=crop",
+            }
+          ]
+        },
       },
     });
 
-    console.log(`Created user: ${user.name}`);
+    createdUsers[user.name] = user.id;
+    console.log(`Created user: ${user.name} (${user.id})`);
   }
 
-  const sneha = await prisma.user.findUnique({ where: { email: "sneha@example.com" } });
-  const mayur = await prisma.user.findUnique({ where: { email: "mayur@example.com" } });
-  if (sneha && mayur) {
-    await prisma.swipe.upsert({
-      where: { senderId_receiverId: { senderId: sneha.id, receiverId: mayur.id } },
-      update: { action: "LIKE" },
-      create: { senderId: sneha.id, receiverId: mayur.id, action: "LIKE" },
+  const snehaId = createdUsers["Sneha"];
+  const mayurId = createdUsers["Mayur"];
+
+  if (snehaId && mayurId) {
+    const coffeeActivity = await prisma.activity.findFirst({ where: { name: "Coffee" } });
+    const foodActivity = await prisma.activity.findFirst({ where: { name: "Food" } });
+
+    const plan1 = await prisma.hangout.create({
+      data: {
+        title: "☕ Morning Coffee at Starbucks",
+        description: "Let's connect for a morning filter coffee and talk about startups/tech!",
+        location: "Dharampeth, Nagpur",
+        creatorId: snehaId,
+        activityId: coffeeActivity?.id,
+        scheduledAt: new Date(Date.now() + 4 * 3600000),
+        maxParticipants: 4,
+        status: "OPEN",
+        imageUrl: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&fit=crop",
+        participants: {
+          create: [
+            { userId: snehaId }
+          ]
+        }
+      }
     });
-    console.log("Seed: Sneha already liked Mayur (test mutual match on like back)");
+    console.log(`Created hangout plan: ${plan1.title}`);
+
+    const plan2 = await prisma.hangout.create({
+      data: {
+        title: "🍕 Weekend Pizza Party",
+        description: "Pizza party this Sunday evening! Fun vibes and board games.",
+        location: "Sitabuldi, Nagpur",
+        creatorId: snehaId,
+        activityId: foodActivity?.id,
+        scheduledAt: new Date(Date.now() + 2 * 24 * 3600000),
+        maxParticipants: 6,
+        status: "OPEN",
+        imageUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&fit=crop",
+        participants: {
+          create: [
+            { userId: snehaId }
+          ]
+        }
+      }
+    });
+    console.log(`Created hangout plan: ${plan2.title}`);
   }
 
-  console.log("Seed completed!");
+  console.log("Database cleared and clean seed inserted!");
 }
 
 main()

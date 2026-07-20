@@ -1,26 +1,36 @@
+import { NextRequest } from "next/server";
 import { success, error } from "@/lib/api-response";
+import { getAuthUser, unauthorized } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const auth = getAuthUser(request);
+    if (auth) {
+      const mine = await prisma.socialStatus.findUnique({
+        where: { userId: auth.userId },
+      });
+      if (mine) return success(mine);
+    }
+
     const statuses = await prisma.socialStatus.findMany({
       include: { user: { include: { profile: true } } },
+      take: 50,
     });
-    if (statuses.length > 0) return success(statuses);
-  } catch {
-    // demo
+    return success(statuses);
+  } catch (err) {
+    console.error("Social status fetch error:", err);
+    return error("Failed to fetch social status", 500);
   }
-
-  return success({
-    energy: "LESSGO",
-    freeNow: true,
-    message: "I'm up for anything!",
-  });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const auth = getAuthUser(request);
+  if (!auth) return unauthorized();
+  const userId = auth.userId;
+
   const body = await request.json();
-  const { userId, energy, freeNow, freeUntil } = body;
+  const { energy, freeNow, freeUntil } = body;
 
   try {
     const status = await prisma.socialStatus.upsert({
@@ -30,7 +40,8 @@ export async function POST(request: Request) {
     });
 
     return success(status);
-  } catch {
-    return success({ energy: energy || "LESSGO", demo: true });
+  } catch (err) {
+    console.error("Social status update error:", err);
+    return error("Failed to update social status", 500);
   }
 }

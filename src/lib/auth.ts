@@ -3,7 +3,19 @@ import jwt from "jsonwebtoken";
 import { NextRequest } from "next/server";
 import { error } from "./api-response";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-key";
+function resolveJwtSecret(): string {
+  if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is required in production");
+  }
+  if (!process.env.JWT_SECRET) {
+    console.warn(
+      "[auth] JWT_SECRET is not set; using insecure dev-secret-key. Set JWT_SECRET before deploying."
+    );
+  }
+  return process.env.JWT_SECRET || "dev-secret-key";
+}
+
+const JWT_SECRET = resolveJwtSecret();
 
 export async function hashPassword(password: string) {
   return bcrypt.hash(password, 10);

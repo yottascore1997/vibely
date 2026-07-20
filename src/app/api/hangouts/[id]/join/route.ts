@@ -1,13 +1,15 @@
+import { NextRequest } from "next/server";
 import { success, error } from "@/lib/api-response";
+import { getAuthUser, unauthorized } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = getAuthUser(request);
+  if (!auth) return unauthorized();
+  const userId = auth.userId;
+
   try {
     const { id } = await params;
-    const body = await request.json();
-    const { userId } = body;
-
-    if (!userId) return error("userId is required");
 
     const hangout = await prisma.hangout.findUnique({
       where: { id },
