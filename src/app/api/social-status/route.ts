@@ -30,13 +30,26 @@ export async function POST(request: NextRequest) {
   const userId = auth.userId;
 
   const body = await request.json();
-  const { energy, freeNow, freeUntil } = body;
+  const { energy, freeNow, freeUntil, activityName, timeLabel } = body;
 
   try {
     const status = await prisma.socialStatus.upsert({
       where: { userId },
-      update: { energy, freeNow, freeUntil: freeUntil ? new Date(freeUntil) : null },
-      create: { userId, energy, freeNow, freeUntil: freeUntil ? new Date(freeUntil) : null },
+      update: {
+        energy,
+        freeNow,
+        freeUntil: freeUntil ? new Date(freeUntil) : null,
+        activityName: activityName ?? undefined,
+        timeLabel: timeLabel ?? undefined,
+      },
+      create: {
+        userId,
+        energy,
+        freeNow,
+        freeUntil: freeUntil ? new Date(freeUntil) : null,
+        activityName: activityName || null,
+        timeLabel: timeLabel || null,
+      },
     });
 
     return success(status);

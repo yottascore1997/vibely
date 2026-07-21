@@ -46,6 +46,12 @@ enum HangoutStatus {
   CANCELLED
 }
 
+enum HangoutKind {
+  HANGOUT
+  EVENT
+  TRAVEL
+}
+
 model User {
   id            String        @id @default(cuid())
   email         String        @unique
@@ -213,11 +219,14 @@ model Hangout {
   creator         User          @relation("HangoutCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   activityId      String?
   activity        Activity?     @relation(fields: [activityId], references: [id])
+  kind            HangoutKind   @default(HANGOUT)
   location        String?
+  destination     String?
   latitude        Float?
   longitude       Float?
   distance        Float?
   scheduledAt     DateTime
+  endDate         DateTime?
   maxParticipants Int           @default(8)
   status          HangoutStatus @default(OPEN)
   imageUrl        String?
@@ -239,13 +248,15 @@ model Participant {
 }
 
 model SocialStatus {
-  id        String       @id @default(cuid())
-  userId    String       @unique
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  energy    SocialEnergy @default(MAYBE)
-  freeNow   Boolean      @default(false)
-  freeUntil DateTime?
-  updatedAt DateTime     @updatedAt
+  id           String       @id @default(cuid())
+  userId       String       @unique
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  energy       SocialEnergy @default(MAYBE)
+  freeNow      Boolean      @default(false)
+  freeUntil    DateTime?
+  activityName String?
+  timeLabel    String?
+  updatedAt    DateTime     @updatedAt
 }
 
 model Notification {

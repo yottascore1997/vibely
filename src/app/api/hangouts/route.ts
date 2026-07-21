@@ -8,10 +8,15 @@ function formatPlan(h: {
   title: string;
   description: string | null;
   location: string | null;
+  destination: string | null;
+  latitude: number | null;
+  longitude: number | null;
   distance: number | null;
   scheduledAt: Date;
+  endDate: Date | null;
   maxParticipants: number;
   status: string;
+  kind: string;
   imageUrl: string | null;
   creatorId: string;
   activity: { name: string } | null;
@@ -33,13 +38,18 @@ function formatPlan(h: {
     title: h.title,
     description: h.description,
     location: h.location,
+    destination: h.destination,
+    latitude: h.latitude,
+    longitude: h.longitude,
     distance: h.distance ?? 2.5,
     scheduledAt: h.scheduledAt,
+    endDate: h.endDate,
     time: scheduled.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }),
     timeLabel: diffMin <= 0 ? "Now" : diffMin < 60 ? `in ${diffMin} min` : scheduled.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }),
     maxParticipants: h.maxParticipants,
     going: h.participants.length,
     status: h.status,
+    kind: h.kind,
     imageUrl: h.imageUrl,
     activity: h.activity?.name,
     badge,
@@ -59,6 +69,7 @@ export async function GET(request: NextRequest) {
   const filter = searchParams.get("filter") || "all";
   const mine = searchParams.get("mine") === "true";
   const city = searchParams.get("city");
+  const kind = searchParams.get("kind"); // HANGOUT | EVENT | TRAVEL
   const auth = getAuthUser(request);
   const userId = auth?.userId ?? null;
 
@@ -67,8 +78,12 @@ export async function GET(request: NextRequest) {
   try {
     let whereClause: any = {};
 
+    if (kind && ["HANGOUT", "EVENT", "TRAVEL"].includes(kind)) {
+      whereClause.kind = kind;
+    }
+
     if (mine && userId) {
-      whereClause.creatorId = userId;
+      whereClause.OR = [{ creatorId: userId }, { participants: { some: { userId } } }];
     } else {
       let targetCity = city;
       if (!targetCity && userId) {
@@ -101,7 +116,7 @@ export async function GET(request: NextRequest) {
     });
 
     let list = hangouts.map(formatPlan);
-    if (!mine && userId) {
+    if (!mine && userId && !kind) {
       list = list.filter((p) => p.creatorId !== userId);
     }
     if (filter === "today") {
@@ -125,16 +140,24 @@ export async function POST(request: NextRequest) {
       title,
       description,
       location,
+      destination,
       scheduledAt,
+      endDate,
       maxParticipants,
       activity,
       imageUrl,
       distance,
+      latitude,
+      longitude,
+      kind,
     } = body;
 
     if (!title || !scheduledAt) {
       return error("Title and time are required");
     }
+
+    const hangoutKind =
+      kind && ["HANGOUT", "EVENT", "TRAVEL"].includes(kind) ? kind : "HANGOUT";
 
     let activityId: string | undefined;
     if (activity) {
@@ -150,13 +173,18 @@ export async function POST(request: NextRequest) {
       data: {
         title,
         description,
-        location: location || null,
+        location: location || destination || null,
+        destination: destination || null,
         scheduledAt: new Date(scheduledAt),
+        endDate: endDate ? new Date(endDate) : null,
         maxParticipants: maxParticipants || 8,
         creatorId,
         activityId,
         imageUrl,
         distance: distance ?? 1.2,
+        latitude: typeof latitude === "number" ? latitude : null,
+        longitude: typeof longitude === "number" ? longitude : null,
+        kind: hangoutKind,
         participants: { create: { userId: creatorId } },
       },
       include: {
