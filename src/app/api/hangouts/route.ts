@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      if (targetCity) {
+      if (targetCity && kind !== "TRAVEL") {
         whereClause.creator = {
           profile: {
             city: targetCity

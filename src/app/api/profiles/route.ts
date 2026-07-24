@@ -40,7 +40,12 @@ function formatProfile(
     distance,
     isVerified: p.isVerified,
     isOnline: p.isOnline,
-    vibeMatch: Math.floor(Math.random() * 15) + 82,
+    vibeMatch: (() => {
+      // Deterministic score from distance + verification (not random)
+      const d = distance ?? 10;
+      const base = d <= 2 ? 96 : d <= 5 ? 92 : d <= 10 ? 88 : d <= 20 ? 84 : 80;
+      return Math.min(99, base + (p.isVerified ? 2 : 0) + (p.isOnline ? 1 : 0));
+    })(),
     avatarUrl: p.avatarUrl || p.photos[0]?.url,
     photos: p.photos.map((ph) => ph.url),
     interests: p.interests.map((ui) => ({
@@ -57,6 +62,8 @@ export async function GET(request: NextRequest) {
   const mode = searchParams.get("mode") || "dating";
   const city = searchParams.get("city");
   const limit = Number(searchParams.get("limit") || 20);
+  const nearbyMode = searchParams.get("nearby") === "1" || searchParams.get("nearby") === "true";
+  const maxKmParam = searchParams.get("maxKm");
   const auth = getAuthUser(request);
   const userId = auth?.userId ?? searchParams.get("userId");
 
@@ -87,7 +94,11 @@ export async function GET(request: NextRequest) {
     }
 
     const myCity = city || myProfile?.city;
-    const maxDistance = myProfile?.maxDistance ?? 25;
+    const maxDistance = maxKmParam
+      ? Number(maxKmParam)
+      : nearbyMode
+        ? 10
+        : myProfile?.maxDistance ?? 25;
     const minAge = myProfile?.minAge ?? 18;
     const maxAge = myProfile?.maxAge ?? 60;
     const genderPref = (myProfile?.genderPreference || "").toUpperCase();
@@ -98,25 +109,25 @@ export async function GET(request: NextRequest) {
           ? { gender: "FEMALE" as const }
           : {};
 
-    const swipedIds = userId
-      ? (
-          await prisma.swipe.findMany({
-            where: { senderId: userId },
-            select: { receiverId: true },
-          })
-        ).map((s) => s.receiverId)
-      : [];
+    // Nearby finder shows everyone in radius (except self); discover still hides swiped/matched
+    let excludeIds: string[] = userId ? [userId] : [];
+    if (!nearbyMode && userId) {
+      const swipedIds = (
+        await prisma.swipe.findMany({
+          where: { senderId: userId },
+          select: { receiverId: true },
+        })
+      ).map((s) => s.receiverId);
 
-    const matchedIds = userId
-      ? (
-          await prisma.match.findMany({
-            where: { OR: [{ user1Id: userId }, { user2Id: userId }] },
-            select: { user1Id: true, user2Id: true },
-          })
-        ).map((m) => (m.user1Id === userId ? m.user2Id : m.user1Id))
-      : [];
+      const matchedIds = (
+        await prisma.match.findMany({
+          where: { OR: [{ user1Id: userId }, { user2Id: userId }] },
+          select: { user1Id: true, user2Id: true },
+        })
+      ).map((m) => (m.user1Id === userId ? m.user2Id : m.user1Id));
 
-    const excludeIds = [...new Set([...(userId ? [userId] : []), ...swipedIds, ...matchedIds])];
+      excludeIds = [...new Set([userId, ...swipedIds, ...matchedIds])];
+    }
 
     // lookingFor is JSON-stringified array e.g. ["FRIENDSHIP","CASUAL"]
     const lookingForClause =
@@ -145,14 +156,14 @@ export async function GET(request: NextRequest) {
 
     const baseWhere = {
       userId: { notIn: excludeIds },
-      ...(myCity ? { city: myCity } : {}),
-      ...genderFilter,
-      AND: lookingForClause ? [lookingForClause, ageClause] : [ageClause],
+      ...(myCity && !nearbyMode ? { city: myCity } : {}),
+      ...(!nearbyMode ? genderFilter : {}),
+      AND: lookingForClause && !nearbyMode ? [lookingForClause, ageClause] : [ageClause],
     };
 
     const profiles = await prisma.profile.findMany({
       where: baseWhere,
-      take: limit * 2,
+      take: Math.max(limit * 3, 60),
       include: {
         user: { select: { id: true, name: true } },
         photos: { orderBy: { order: "asc" } },
@@ -172,10 +183,10 @@ export async function GET(request: NextRequest) {
       const nearby = await prisma.profile.findMany({
         where: {
           userId: { notIn: excludeIds },
-          ...genderFilter,
+          ...(!nearbyMode ? genderFilter : {}),
           AND: [ageClause],
         },
-        take: limit,
+        take: Math.max(limit * 2, 40),
         include: {
           user: { select: { id: true, name: true } },
           photos: { orderBy: { order: "asc" } },

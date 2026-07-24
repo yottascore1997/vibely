@@ -61,8 +61,8 @@ export default function SiteFooter() {
                 title: "Support",
                 links: [
                   { href: "/auth", label: "Help Center" },
-                  { href: "/auth", label: "Safety" },
-                  { href: "/auth", label: "Contact" },
+                  { href: "/privacy", label: "Privacy Policy" },
+                  { href: "/terms", label: "Terms & Conditions" },
                 ],
               },
               {
@@ -125,11 +125,19 @@ export default function SiteFooter() {
       </div>
 
       <div className="border-t border-white/8 py-5">
-        <div className="site-wrap flex flex-col items-center justify-between gap-2 text-xs text-vibe-faint sm:flex-row">
+        <div className="site-wrap flex flex-col items-center justify-between gap-3 text-xs text-vibe-faint sm:flex-row">
           <p>© {new Date().getFullYear()} Vibely. All rights reserved.</p>
-          <p className="inline-flex items-center gap-1">
-            Made with <Heart className="h-3 w-3 fill-vibe-pink text-vibe-pink" /> for real connections
-          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+            <Link href="/privacy" className="hover:text-vibe-pink">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="hover:text-vibe-pink">
+              Terms & Conditions
+            </Link>
+            <p className="inline-flex items-center gap-1">
+              Made with <Heart className="h-3 w-3 fill-vibe-pink text-vibe-pink" /> for real connections
+            </p>
+          </div>
         </div>
       </div>
     </footer>

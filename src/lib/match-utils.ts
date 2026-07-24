@@ -20,7 +20,12 @@ export function estimateDistanceKm(
     return Math.round(6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)) * 10) / 10;
   }
   if (cityA && cityB && cityA.toLowerCase() === cityB.toLowerCase()) {
-    return Math.round((1.2 + Math.random() * 4.5) * 10) / 10;
+    // Stable same-city estimate (no random) so Nearby/Discover stay consistent
+    const hash = `${cityA}:${cityB}`.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+    return Math.round((1.5 + (hash % 40) / 10) * 10) / 10;
   }
-  return Math.round((8 + Math.random() * 18) * 10) / 10;
+  if (cityA && cityB) {
+    return 15;
+  }
+  return 12;
 }
