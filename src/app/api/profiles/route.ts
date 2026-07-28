@@ -18,7 +18,16 @@ function formatProfile(
     isVerified: boolean;
     isOnline: boolean;
     avatarUrl: string | null;
-    user: { id: string; name: string };
+    user: {
+      id: string;
+      name: string;
+      socialStatus?: {
+        energy: string;
+        freeNow: boolean;
+        activityName: string | null;
+        timeLabel: string | null;
+      } | null;
+    };
     photos: { url: string }[];
     interests: { interest: { name: string; color: string | null; icon: string | null } }[];
   },
@@ -54,6 +63,16 @@ function formatProfile(
       icon: ui.interest.icon,
     })),
     mode,
+    socialStatus: p.user.socialStatus
+      ? {
+          energy: p.user.socialStatus.energy,
+          freeNow: p.user.socialStatus.freeNow,
+          activityName: p.user.socialStatus.activityName,
+          timeLabel: p.user.socialStatus.timeLabel,
+        }
+      : null,
+    energy: p.user.socialStatus?.energy || "MAYBE",
+    freeNow: p.user.socialStatus?.freeNow || false,
   };
 }
 
@@ -165,7 +184,7 @@ export async function GET(request: NextRequest) {
       where: baseWhere,
       take: Math.max(limit * 3, 60),
       include: {
-        user: { select: { id: true, name: true } },
+        user: { select: { id: true, name: true, socialStatus: true } },
         photos: { orderBy: { order: "asc" } },
         interests: { include: { interest: true } },
       },

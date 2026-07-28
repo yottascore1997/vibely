@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SiteLayout from "@/components/site/SiteLayout";
 import PageHero from "@/components/site/PageHero";
 
@@ -33,6 +33,32 @@ const ACTIVITIES = ["Coffee ☕", "Food 🍕", "Movie 🎬", "Sports 🏸", "Dri
 export default function FriendsPage() {
   const [active, setActive] = useState<(typeof STATUSES)[number]["id"]>("lessgo");
 
+  useEffect(() => {
+    fetch("/api/social-status")
+      .then((res) => res.json())
+      .then((data) => {
+        const s = data?.data || data;
+        if (s?.energy) {
+          if (s.energy === "LESSGO") setActive("lessgo");
+          else if (s.energy === "MAYBE") setActive("maybe");
+          else if (s.energy === "OFF_GRID") setActive("off");
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleStatusChange = async (id: "lessgo" | "maybe" | "off") => {
+    setActive(id);
+    const energy = id === "lessgo" ? "LESSGO" : id === "maybe" ? "MAYBE" : "OFF_GRID";
+    try {
+      await fetch("/api/social-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ energy, freeNow: id === "lessgo" }),
+      });
+    } catch {}
+  };
+
   return (
     <SiteLayout>
       <PageHero
@@ -60,7 +86,7 @@ export default function FriendsPage() {
                 <button
                   key={s.id}
                   type="button"
-                  onClick={() => setActive(s.id)}
+                  onClick={() => handleStatusChange(s.id as "lessgo" | "maybe" | "off")}
                   className={`rounded-3xl border p-5 text-center transition ${
                     on ? "border-transparent shadow-lg" : "border-vibe-border bg-white/60"
                   }`}

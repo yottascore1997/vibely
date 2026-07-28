@@ -6,16 +6,29 @@ import { prisma } from "@/lib/prisma";
 export async function GET(request: NextRequest) {
   try {
     const auth = getAuthUser(request);
-    if (auth) {
+    const { searchParams } = new URL(request.url);
+    const targetUserId = searchParams.get("userId");
+    const fetchAll = searchParams.get("all") === "true";
+
+    if (targetUserId) {
+      const status = await prisma.socialStatus.findUnique({
+        where: { userId: targetUserId },
+        include: { user: { include: { profile: true } } },
+      });
+      return success(status);
+    }
+
+    if (auth && !fetchAll && !searchParams.has("userId")) {
       const mine = await prisma.socialStatus.findUnique({
         where: { userId: auth.userId },
+        include: { user: { include: { profile: true } } },
       });
       if (mine) return success(mine);
     }
 
     const statuses = await prisma.socialStatus.findMany({
       include: { user: { include: { profile: true } } },
-      take: 50,
+      take: 100,
     });
     return success(statuses);
   } catch (err) {
@@ -36,19 +49,22 @@ export async function POST(request: NextRequest) {
     const status = await prisma.socialStatus.upsert({
       where: { userId },
       update: {
-        energy,
-        freeNow,
+        energy: energy || "LESSGO",
+        freeNow: freeNow ?? (energy === "LESSGO"),
         freeUntil: freeUntil ? new Date(freeUntil) : null,
         activityName: activityName ?? undefined,
         timeLabel: timeLabel ?? undefined,
       },
       create: {
         userId,
-        energy,
-        freeNow,
+        energy: energy || "LESSGO",
+        freeNow: freeNow ?? (energy === "LESSGO"),
         freeUntil: freeUntil ? new Date(freeUntil) : null,
         activityName: activityName || null,
         timeLabel: timeLabel || null,
+      },
+      include: {
+        user: { include: { profile: true } },
       },
     });
 

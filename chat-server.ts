@@ -84,10 +84,20 @@ io.on("connection", (socket) => {
       try {
         let payload;
         if (isGroup) {
-          const participant = await prisma.hangoutParticipant.findFirst({
-            where: { hangoutId: matchId, userId: senderId },
+          const hangout = await prisma.hangout.findUnique({
+            where: { id: matchId },
+            include: { participants: { select: { userId: true } } },
           });
-          if (!participant) {
+
+          if (!hangout) {
+            console.warn(`[ChatServer] Hangout ${matchId} not found`);
+            return;
+          }
+
+          const isCreator = hangout.creatorId === senderId;
+          const isParticipant = hangout.participants.some((p) => p.userId === senderId);
+
+          if (!isCreator && !isParticipant) {
             console.warn(`[ChatServer] User ${senderId} not in hangout ${matchId}`);
             return;
           }

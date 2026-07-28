@@ -50,6 +50,8 @@ function formatPlan(h: {
     going: h.participants.length,
     status: h.status,
     kind: h.kind,
+    visibility: (h as any).visibility || ((h as any).isPrivate ? "FRIENDS" : "PUBLIC"),
+    isPrivate: (h as any).isPrivate ?? ((h as any).visibility === "FRIENDS"),
     imageUrl: h.imageUrl,
     activity: h.activity?.name,
     badge,
@@ -105,6 +107,15 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    let matchedUserIds: string[] = [];
+    if (userId) {
+      const matches = await prisma.match.findMany({
+        where: { OR: [{ user1Id: userId }, { user2Id: userId }] },
+        select: { user1Id: true, user2Id: true },
+      });
+      matchedUserIds = matches.map((m) => (m.user1Id === userId ? m.user2Id : m.user1Id));
+    }
+
     const hangouts = await prisma.hangout.findMany({
       where: whereClause,
       include: {
@@ -116,6 +127,31 @@ export async function GET(request: NextRequest) {
     });
 
     let list = hangouts.map(formatPlan);
+
+    // Apply Friends-Only vs Public Privacy & Visibility Filter
+    const visParam = (searchParams.get("visibility") || searchParams.get("audience") || "").toLowerCase();
+    list = list.filter((p) => {
+      const isCreator = p.creatorId === userId;
+      const isParticipant = p.participants.some((pt) => pt.id === userId);
+      const isMatchedFriend = matchedUserIds.includes(p.creatorId);
+
+      if (p.isPrivate || p.visibility === "FRIENDS") {
+        // Friends-only plan: Only creator, participants, or matched friends can see
+        if (!isCreator && !isParticipant && !isMatchedFriend) {
+          return false;
+        }
+      }
+
+      if (visParam === "public") {
+        return !p.isPrivate && p.visibility !== "FRIENDS";
+      }
+      if (visParam === "friends" || visParam === "friends_only") {
+        return p.isPrivate || p.visibility === "FRIENDS";
+      }
+
+      return true;
+    });
+
     if (!mine && userId && !kind) {
       list = list.filter((p) => p.creatorId !== userId);
     }
@@ -150,6 +186,8 @@ export async function POST(request: NextRequest) {
       latitude,
       longitude,
       kind,
+      visibility,
+      isPrivate,
     } = body;
 
     if (!title || !scheduledAt) {
@@ -158,6 +196,8 @@ export async function POST(request: NextRequest) {
 
     const hangoutKind =
       kind && ["HANGOUT", "EVENT", "TRAVEL"].includes(kind) ? kind : "HANGOUT";
+    const isPrivateBool = isPrivate === true || visibility === "FRIENDS" || visibility === "FRIENDS_ONLY";
+    const visibilityStr = isPrivateBool ? "FRIENDS" : "PUBLIC";
 
     let activityId: string | undefined;
     if (activity) {
@@ -185,6 +225,8 @@ export async function POST(request: NextRequest) {
         latitude: typeof latitude === "number" ? latitude : null,
         longitude: typeof longitude === "number" ? longitude : null,
         kind: hangoutKind,
+        visibility: visibilityStr,
+        isPrivate: isPrivateBool,
         participants: { create: { userId: creatorId } },
       },
       include: {

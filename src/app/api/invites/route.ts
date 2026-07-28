@@ -19,8 +19,8 @@ export async function GET(request: NextRequest) {
         ],
       },
       include: {
-        sender: { include: { profile: true } },
-        receiver: { include: { profile: true } },
+        sender: { include: { profile: true, socialStatus: true } },
+        receiver: { include: { profile: true, socialStatus: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -29,8 +29,10 @@ export async function GET(request: NextRequest) {
       id: inv.id,
       senderName: inv.sender.name,
       senderAvatar: inv.sender.profile?.avatarUrl,
-      recipientName: inv.receiver.name,
-      recipientAvatar: inv.receiver.profile?.avatarUrl,
+      senderEnergy: inv.sender.socialStatus?.energy || "MAYBE",
+      recipientName: inv.receiver?.name || inv.inviteeName || "Guest",
+      recipientAvatar: inv.receiver?.profile?.avatarUrl || null,
+      recipientEnergy: inv.receiver?.socialStatus?.energy || "MAYBE",
       activityEmoji: inv.activityEmoji,
       activityName: inv.activityName,
       timeLabel: inv.timeLabel,
@@ -87,8 +89,8 @@ export async function POST(request: NextRequest) {
         status: "PENDING",
       },
       include: {
-        sender: { include: { profile: true } },
-        receiver: { include: { profile: true } },
+        sender: { include: { profile: true, socialStatus: true } },
+        receiver: { include: { profile: true, socialStatus: true } },
       },
     });
 
@@ -96,8 +98,8 @@ export async function POST(request: NextRequest) {
       id: invite.id,
       senderName: invite.sender.name,
       senderAvatar: invite.sender.profile?.avatarUrl,
-      recipientName: invite.receiver.name,
-      recipientAvatar: invite.receiver.profile?.avatarUrl,
+      recipientName: invite.receiver?.name || invite.inviteeName || "Guest",
+      recipientAvatar: invite.receiver?.profile?.avatarUrl || null,
       activityEmoji: invite.activityEmoji,
       activityName: invite.activityName,
       timeLabel: invite.timeLabel,

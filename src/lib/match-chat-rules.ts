@@ -1,6 +1,6 @@
-/** After match: one opener allowed; other must reply within 24h or match auto-deletes. */
+/** After match: one opener allowed; other must reply within 48h or match auto-deletes. Once replied, chat is unlocked permanently! */
 
-export const MATCH_REPLY_WINDOW_MS = 24 * 60 * 60 * 1000;
+export const MATCH_REPLY_WINDOW_MS = 48 * 60 * 60 * 1000;
 
 export type MatchMessageLite = {
   senderId: string;
@@ -52,8 +52,8 @@ export function evaluateChatGate(params: {
       expired,
       expiresAt: expiresAt.toISOString(),
       reason: expired
-        ? "Match expired — no message was sent within 24 hours"
-        : "Send one hello — they have 24 hours to reply",
+        ? "Match expired — no message was sent within 48 hours"
+        : "Send one hello — they have 48 hours to reply",
     };
   }
 
@@ -71,7 +71,7 @@ export function evaluateChatGate(params: {
       mustSendOpener: false,
       expired: true,
       expiresAt: expiresAt.toISOString(),
-      reason: "Match expired — no reply within 24 hours",
+      reason: "Match expired — no reply within 48 hours",
     };
   }
 
@@ -83,7 +83,7 @@ export function evaluateChatGate(params: {
       mustSendOpener: false,
       expired: false,
       expiresAt: expiresAt.toISOString(),
-      reason: "Waiting for their reply (24h) — then chat unlocks",
+      reason: "Waiting for their reply (48h) — then chat unlocks permanently",
     };
   }
 
@@ -94,7 +94,7 @@ export function evaluateChatGate(params: {
     mustSendOpener: false,
     expired: false,
     expiresAt: expiresAt.toISOString(),
-    reason: "Reply to unlock the chat — or match expires in 24h",
+    reason: "Reply to unlock the chat permanently — or match expires in 48h",
   };
 }
 

@@ -75,6 +75,8 @@ model User {
   receivedInvites Invite[]     @relation("ReceivedInvites")
   jarItems      JarItem[]
   groupMessages GroupMessage[]
+  expensesPaid  EventExpense[]
+  expenseSplits ExpenseSplit[]
 }
 
 model Profile {
@@ -220,6 +222,8 @@ model Hangout {
   activityId      String?
   activity        Activity?     @relation(fields: [activityId], references: [id])
   kind            HangoutKind   @default(HANGOUT)
+  visibility      String        @default("PUBLIC")
+  isPrivate       Boolean       @default(false)
   location        String?
   destination     String?
   latitude        Float?
@@ -278,17 +282,22 @@ enum InviteStatus {
 
 model Invite {
   id            String       @id @default(cuid())
+  inviteCode    String?      @unique @default(cuid())
   senderId      String
-  receiverId    String
+  receiverId    String?
+  inviteePhone  String?
+  inviteeName   String?
+  isWebRsvp     Boolean      @default(false)
   activityName  String
   activityEmoji String
   timeLabel     String
   status        InviteStatus @default(PENDING)
   createdAt     DateTime     @default(now())
   sender        User         @relation("SentInvites", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver      User         @relation("ReceivedInvites", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiver      User?        @relation("ReceivedInvites", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@index([receiverId])
+  @@index([inviteCode])
 }
 
 model JarItem {
@@ -317,6 +326,38 @@ model GroupMessage {
 
   @@index([hangoutId])
   @@index([hangoutId, createdAt])
+}
+
+model EventExpense {
+  id          String         @id @default(cuid())
+  hangoutId   String?
+  eventId     String?
+  payerId     String
+  title       String
+  amount      Float
+  category    String         @default("General")
+  receiptUrl  String?
+  createdAt   DateTime       @default(now())
+  payer       User           @relation(fields: [payerId], references: [id], onDelete: Cascade)
+  splits      ExpenseSplit[]
+
+  @@index([hangoutId])
+  @@index([eventId])
+  @@index([payerId])
+}
+
+model ExpenseSplit {
+  id          String       @id @default(cuid())
+  expenseId   String
+  userId      String
+  amount      Float
+  isSettled   Boolean      @default(false)
+  settledAt   DateTime?
+  expense     EventExpense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expenseId])
+  @@index([userId])
 }
 
 

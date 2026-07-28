@@ -111,10 +111,14 @@ export async function GET(request: NextRequest) {
       where: { id: authUser.userId },
       include: {
         profile: { include: { interests: { include: { interest: true } } } },
+        socialStatus: true,
       },
     });
     if (!user) return error("User not found", 404);
-    return success(user);
+    return success({
+      ...user,
+      onboardingDone: user.profile?.onboardingDone ?? false,
+    });
   } catch (err) {
     console.error("Profile fetch error:", err);
     return error("Failed to fetch profile", 500);

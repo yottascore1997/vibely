@@ -19,6 +19,12 @@ function formatMatch(
       photos: { url: string }[];
       interests: { interest: { name: string; color: string | null } }[];
     } | null;
+    socialStatus?: {
+      energy: string;
+      freeNow: boolean;
+      activityName: string | null;
+      timeLabel: string | null;
+    } | null;
   },
   myCity?: string | null,
   matchedAt?: Date
@@ -36,6 +42,16 @@ function formatMatch(
     avatarUrl: p?.avatarUrl || p?.photos[0]?.url,
     interests: p?.interests.map((i) => ({ name: i.interest.name, color: i.interest.color || "#8A56FF" })) || [],
     matchedAt: matchedAt?.toISOString(),
+    socialStatus: other.socialStatus
+      ? {
+          energy: other.socialStatus.energy,
+          freeNow: other.socialStatus.freeNow,
+          activityName: other.socialStatus.activityName,
+          timeLabel: other.socialStatus.timeLabel,
+        }
+      : null,
+    energy: other.socialStatus?.energy || "MAYBE",
+    freeNow: other.socialStatus?.freeNow || false,
   };
 }
 
@@ -61,6 +77,7 @@ export async function GET(request: NextRequest) {
     const users = await prisma.user.findMany({
       where: { id: { in: otherIds } },
       include: {
+        socialStatus: true,
         profile: {
           include: {
             photos: { orderBy: { order: "asc" }, take: 1 },
