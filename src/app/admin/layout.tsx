@@ -5,6 +5,8 @@ import { prisma } from "../../lib/prisma";
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "./actions";
 
+export const dynamic = "force-dynamic";
+
 async function checkDatabaseConnection() {
   try {
     await prisma.$queryRaw`SELECT 1`;
