@@ -41,7 +41,15 @@ async function getDashboardData() {
       }
     });
 
-    const recentProfiles = dbProfiles.map(p => ({
+    const recentProfiles = dbProfiles.map((p: {
+      id: string;
+      firstName: string | null;
+      age: number | null;
+      city: string | null;
+      avatarUrl: string | null;
+      isPremium: boolean;
+      isVerified: boolean;
+    }) => ({
       id: p.id,
       name: p.firstName || "Anonymous",
       age: p.age || 20,
@@ -63,7 +71,13 @@ async function getDashboardData() {
       }
     });
 
-    const activeHangouts = dbHangouts.map(h => ({
+    const activeHangouts = dbHangouts.map((h: {
+      id: string;
+      title: string;
+      creator: { name: string };
+      maxParticipants: number;
+      participants: { id: string }[];
+    }) => ({
       id: h.id,
       title: h.title,
       creator: h.creator.name,
