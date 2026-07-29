@@ -1,25 +1,20 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Manrope } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const cormorant = Cormorant_Garamond({
-  variable: "--font-cormorant",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const manrope = Manrope({
-  variable: "--font-manrope",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Hangora",
+    default: "Hangora — Meet Real People. Create Real Moments.",
     template: "%s · Hangora",
   },
-  description: "Meet. Hang. Belong.",
+  description:
+    "Find people nearby for coffee, travel, movies, gym and more. Meet real people. Create real moments.",
 };
 
 export default function RootLayout({
@@ -28,8 +23,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${manrope.variable} h-full`}>
-      <body className="min-h-full bg-vibe-bg font-sans text-vibe-ink antialiased">{children}</body>
+    <html lang="en" className={`${jakarta.variable} h-full`}>
+      <body className="min-h-full font-sans antialiased">{children}</body>
     </html>
   );
 }

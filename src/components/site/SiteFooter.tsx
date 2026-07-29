@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, Apple, Play } from "lucide-react";
+import { Apple, Play } from "lucide-react";
 
 const socials = [
   {
@@ -24,80 +24,26 @@ const socials = [
 
 export default function SiteFooter() {
   return (
-    <footer className="border-t border-white/8 bg-[#050508]">
+    <footer className="border-t border-violet-100 bg-white">
       <div className="site-wrap py-14">
-        <div className="grid gap-10 lg:grid-cols-[1.2fr_1.6fr_1fr]">
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <h3 className="text-xl font-extrabold text-white">Stay in the loop</h3>
-            <p className="mt-2 text-sm text-vibe-muted">
-              Get hangout ideas, event drops & vibe tips in your inbox.
+            <div className="flex items-center gap-2.5">
+              <span className="purple-gradient flex h-10 w-10 items-center justify-center rounded-xl text-sm font-extrabold text-white">
+                H
+              </span>
+              <span className="text-xl font-extrabold text-[#1a1030]">Hangora</span>
+            </div>
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#6b6280]">
+              Meet real people. Create real moments.
             </p>
-            <form className="mt-5 flex gap-2" onSubmit={(e) => e.preventDefault()}>
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="min-w-0 flex-1 rounded-full border border-white/12 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-vibe-faint focus:border-vibe-purple"
-              />
-              <button
-                type="submit"
-                className="purple-gradient shrink-0 rounded-full px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-purple)]"
-              >
-                Subscribe
-              </button>
-            </form>
-          </div>
-
-          <div className="grid grid-cols-3 gap-6">
-            {[
-              {
-                title: "Hangora",
-                links: [
-                  { href: "/discover", label: "About" },
-                  { href: "/auth", label: "Careers" },
-                  { href: "/matches", label: "Press" },
-                ],
-              },
-              {
-                title: "Support",
-                links: [
-                  { href: "/auth", label: "Help Center" },
-                  { href: "/privacy", label: "Privacy Policy" },
-                  { href: "/terms", label: "Terms & Conditions" },
-                ],
-              },
-              {
-                title: "Explore",
-                links: [
-                  { href: "/events", label: "Events" },
-                  { href: "/hangout", label: "Hangouts" },
-                  { href: "/travel", label: "Travel" },
-                ],
-              },
-            ].map((col) => (
-              <div key={col.title}>
-                <p className="text-sm font-extrabold text-white">{col.title}</p>
-                <ul className="mt-3 space-y-2 text-sm text-vibe-muted">
-                  {col.links.map((l) => (
-                    <li key={l.label}>
-                      <Link href={l.href} className="hover:text-vibe-pink">
-                        {l.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div>
-            <p className="text-sm font-extrabold text-white">Follow us</p>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-4 flex gap-2">
               {socials.map((s) => (
                 <a
                   key={s.label}
                   href="#"
                   aria-label={s.label}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/12 bg-white/5 text-vibe-muted transition hover:border-vibe-pink/50 hover:text-vibe-pink"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-violet-100 bg-violet-50 text-[#6b6280] transition hover:border-violet-300 hover:text-vibe-purple"
                 >
                   <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden>
                     <path d={s.path} />
@@ -105,38 +51,70 @@ export default function SiteFooter() {
                 </a>
               ))}
             </div>
-            <p className="mt-5 text-sm font-extrabold text-white">Download App</p>
+          </div>
+
+          {[
+            {
+              title: "Company",
+              links: [
+                { href: "/discover", label: "About" },
+                { href: "/auth", label: "Careers" },
+                { href: "/events", label: "Press" },
+              ],
+            },
+            {
+              title: "Support",
+              links: [
+                { href: "/auth", label: "Help Center" },
+                { href: "/privacy", label: "Privacy" },
+                { href: "/terms", label: "Terms" },
+              ],
+            },
+          ].map((col) => (
+            <div key={col.title}>
+              <p className="text-sm font-extrabold text-[#1a1030]">{col.title}</p>
+              <ul className="mt-3 space-y-2 text-sm text-[#6b6280]">
+                {col.links.map((l) => (
+                  <li key={l.label}>
+                    <Link href={l.href} className="hover:text-vibe-purple">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+
+          <div>
+            <p className="text-sm font-extrabold text-[#1a1030]">Download</p>
             <div className="mt-3 flex flex-col gap-2">
               <a
-                href="#"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/12 bg-white px-4 py-2.5 text-xs font-bold text-black"
-              >
-                <Play className="h-3.5 w-3.5 fill-black" /> Google Play
-              </a>
-              <a
-                href="#"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-bold text-white"
+                href="/auth"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1a1030] px-4 py-2.5 text-xs font-bold text-white"
               >
                 <Apple className="h-3.5 w-3.5" /> App Store
+              </a>
+              <a
+                href="/auth"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-violet-100 bg-violet-50 px-4 py-2.5 text-xs font-bold text-[#1a1030]"
+              >
+                <Play className="h-3.5 w-3.5 fill-current" /> Google Play
               </a>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="border-t border-white/8 py-5">
-        <div className="site-wrap flex flex-col items-center justify-between gap-3 text-xs text-vibe-faint sm:flex-row">
+      <div className="border-t border-violet-100 py-5">
+        <div className="site-wrap flex flex-col items-center justify-between gap-2 text-xs text-[#9b93ad] sm:flex-row">
           <p>© {new Date().getFullYear()} Hangora. All rights reserved.</p>
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-            <Link href="/privacy" className="hover:text-vibe-pink">
+          <div className="flex gap-4">
+            <Link href="/privacy" className="hover:text-vibe-purple">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="hover:text-vibe-pink">
+            <Link href="/terms" className="hover:text-vibe-purple">
               Terms & Conditions
             </Link>
-            <p className="inline-flex items-center gap-1">
-              Made with <Heart className="h-3 w-3 fill-vibe-pink text-vibe-pink" /> for real connections
-            </p>
           </div>
         </div>
       </div>
