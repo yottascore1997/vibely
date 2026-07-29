@@ -27,7 +27,7 @@ export default function SiteHeader() {
             <Sparkles className="h-4 w-4" strokeWidth={2.25} />
             <span className="pulse-ring absolute inset-0 rounded-2xl bg-purple-400/40" />
           </span>
-          <span className="font-display text-[23px] font-extrabold tracking-tight text-white transition group-hover:text-purple-200">
+          <span className="font-display text-[26px] font-semibold tracking-tight text-white transition group-hover:text-violet-200">
             Hangora
           </span>
         </Link>

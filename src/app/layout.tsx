@@ -1,32 +1,25 @@
 import type { Metadata } from "next";
-import { Outfit, Syne, Great_Vibes } from "next/font/google";
+import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const syne = Syne({
-  variable: "--font-syne",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
-});
-
-const greatVibes = Great_Vibes({
-  variable: "--font-great-vibes",
-  subsets: ["latin"],
-  weight: ["400"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Hangora — Meet. Hang. Belong.",
+    default: "Hangora",
     template: "%s · Hangora",
   },
-  description:
-    "Hangora helps you meet people nearby, join spontaneous hangouts, and turn vibes into real plans.",
+  description: "Meet. Hang. Belong.",
 };
 
 export default function RootLayout({
@@ -35,10 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${outfit.variable} ${syne.variable} ${greatVibes.variable} h-full`}
-    >
+    <html lang="en" className={`${cormorant.variable} ${manrope.variable} h-full`}>
       <body className="min-h-full bg-vibe-bg font-sans text-vibe-ink antialiased">{children}</body>
     </html>
   );
