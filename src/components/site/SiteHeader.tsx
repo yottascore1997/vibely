@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Heart, Menu, Sun, X } from "lucide-react";
+import { Menu, Sparkles, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const LINKS = [
   { href: "/", label: "Home" },
   { href: "/discover", label: "Discover" },
   { href: "/events", label: "Events" },
+  { href: "/hangout", label: "Hangouts" },
   { href: "/matches", label: "Matches" },
   { href: "/chats", label: "Messages", badge: 3 },
-  { href: "/friends", label: "Blog" },
 ];
 
 export default function SiteHeader() {
@@ -20,13 +20,16 @@ export default function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/8 bg-[#07070b]/75 backdrop-blur-2xl">
+    <header className="sticky top-0 z-50 border-b border-white/8 bg-[#06040f]/70 backdrop-blur-2xl">
       <div className="site-wrap flex h-[72px] items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-          <span className="pink-gradient flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-[var(--shadow-pink)]">
-            <Heart className="h-4 w-4 fill-white" strokeWidth={0} />
+        <Link href="/" className="group flex items-center gap-2.5" onClick={() => setOpen(false)}>
+          <span className="purple-gradient relative flex h-10 w-10 items-center justify-center rounded-2xl text-white shadow-[var(--shadow-purple)]">
+            <Sparkles className="h-4 w-4" strokeWidth={2.25} />
+            <span className="pulse-ring absolute inset-0 rounded-2xl bg-purple-400/40" />
           </span>
-          <span className="text-[22px] font-extrabold tracking-tight text-white">Vibely</span>
+          <span className="font-display text-[23px] font-extrabold tracking-tight text-white transition group-hover:text-purple-200">
+            Hangora
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">
@@ -37,13 +40,13 @@ export default function SiteHeader() {
                 key={link.href}
                 href={link.href}
                 className={`relative rounded-full px-3.5 py-2 text-sm font-semibold transition ${
-                  active ? "text-vibe-pink" : "text-vibe-muted hover:text-white"
+                  active ? "text-vibe-purple" : "text-vibe-muted hover:text-white"
                 }`}
               >
                 <span className="inline-flex items-center gap-1.5">
                   {link.label}
                   {link.badge ? (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-vibe-pink px-1 text-[10px] font-bold text-white">
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-vibe-purple px-1 text-[10px] font-bold text-white">
                       {link.badge}
                     </span>
                   ) : null}
@@ -51,7 +54,7 @@ export default function SiteHeader() {
                 {active ? (
                   <motion.span
                     layoutId="nav-underline"
-                    className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-vibe-pink"
+                    className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-vibe-purple"
                   />
                 ) : null}
               </Link>
@@ -62,23 +65,16 @@ export default function SiteHeader() {
         <div className="flex items-center gap-2">
           <Link
             href="/auth"
-            className="pink-gradient hidden rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-[var(--shadow-pink)] sm:inline-flex"
-          >
-            Join Now
-          </Link>
-          <Link
-            href="/auth"
-            className="hidden rounded-full border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-bold text-white sm:inline-flex"
+            className="hidden rounded-full border border-white/12 bg-white/5 px-4 py-2.5 text-sm font-bold text-white transition hover:border-purple-400/40 sm:inline-flex"
           >
             Login
           </Link>
-          <button
-            type="button"
-            aria-label="Theme"
-            className="hidden h-10 w-10 items-center justify-center rounded-full border border-white/12 bg-white/5 text-vibe-muted md:inline-flex"
+          <Link
+            href="/auth"
+            className="purple-gradient hidden rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-[var(--shadow-purple)] transition hover:scale-[1.03] sm:inline-flex"
           >
-            <Sun className="h-4 w-4" />
-          </button>
+            Join Hangora
+          </Link>
           <button
             type="button"
             aria-label="Menu"
@@ -96,7 +92,7 @@ export default function SiteHeader() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-t border-white/8 bg-[#0c0c12] lg:hidden"
+            className="overflow-hidden border-t border-white/8 bg-[#0c0818] lg:hidden"
           >
             <div className="flex flex-col gap-1 px-4 py-3">
               {LINKS.map((link) => (
@@ -120,9 +116,9 @@ export default function SiteHeader() {
                 <Link
                   href="/auth"
                   onClick={() => setOpen(false)}
-                  className="pink-gradient rounded-full py-2.5 text-center text-sm font-bold text-white"
+                  className="purple-gradient rounded-full py-2.5 text-center text-sm font-bold text-white"
                 >
-                  Join Now
+                  Join Hangora
                 </Link>
               </div>
             </div>

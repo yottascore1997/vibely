@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Great_Vibes } from "next/font/google";
+import { Outfit, Syne, Great_Vibes } from "next/font/google";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
+});
+
+const syne = Syne({
+  variable: "--font-syne",
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
 });
 
 const greatVibes = Great_Vibes({
@@ -16,11 +22,11 @@ const greatVibes = Great_Vibes({
 
 export const metadata: Metadata = {
   title: {
-    default: "Vibely — Find your vibe. Create real connections.",
-    template: "%s · Vibely",
+    default: "Hangora — Meet. Hang. Belong.",
+    template: "%s · Hangora",
   },
   description:
-    "Meet new people, join local events, and create real connections with Vibely.",
+    "Hangora helps you meet people nearby, join spontaneous hangouts, and turn vibes into real plans.",
 };
 
 export default function RootLayout({
@@ -29,7 +35,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${greatVibes.variable} h-full`}>
+    <html
+      lang="en"
+      className={`${outfit.variable} ${syne.variable} ${greatVibes.variable} h-full`}
+    >
       <body className="min-h-full bg-vibe-bg font-sans text-vibe-ink antialiased">{children}</body>
     </html>
   );

@@ -36,11 +36,11 @@ export default function SiteFooter() {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="min-w-0 flex-1 rounded-full border border-white/12 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-vibe-faint focus:border-vibe-pink"
+                className="min-w-0 flex-1 rounded-full border border-white/12 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-vibe-faint focus:border-vibe-purple"
               />
               <button
                 type="submit"
-                className="pink-gradient shrink-0 rounded-full px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-pink)]"
+                className="purple-gradient shrink-0 rounded-full px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-purple)]"
               >
                 Subscribe
               </button>
@@ -50,7 +50,7 @@ export default function SiteFooter() {
           <div className="grid grid-cols-3 gap-6">
             {[
               {
-                title: "Vibely",
+                title: "Hangora",
                 links: [
                   { href: "/discover", label: "About" },
                   { href: "/auth", label: "Careers" },
@@ -126,7 +126,7 @@ export default function SiteFooter() {
 
       <div className="border-t border-white/8 py-5">
         <div className="site-wrap flex flex-col items-center justify-between gap-3 text-xs text-vibe-faint sm:flex-row">
-          <p>© {new Date().getFullYear()} Vibely. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Hangora. All rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <Link href="/privacy" className="hover:text-vibe-pink">
               Privacy Policy
