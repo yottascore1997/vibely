@@ -125,7 +125,7 @@ export async function POST(request: Request) {
       });
 
       if (hangout) {
-        const participantUserIds = hangout.participants.map((p) => p.userId);
+        const participantUserIds = hangout.participants.map((p: { userId: string }) => p.userId);
         const allIds = new Set([hangout.creatorId, ...participantUserIds, payerId]);
         members = Array.from(allIds);
       }

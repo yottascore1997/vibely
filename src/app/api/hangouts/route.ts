@@ -113,7 +113,9 @@ export async function GET(request: NextRequest) {
         where: { OR: [{ user1Id: userId }, { user2Id: userId }] },
         select: { user1Id: true, user2Id: true },
       });
-      matchedUserIds = matches.map((m) => (m.user1Id === userId ? m.user2Id : m.user1Id));
+      matchedUserIds = matches.map((m: { user1Id: string; user2Id: string }) =>
+        m.user1Id === userId ? m.user2Id : m.user1Id
+      );
     }
 
     const hangouts = await prisma.hangout.findMany({

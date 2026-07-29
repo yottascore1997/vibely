@@ -73,7 +73,9 @@ export async function GET(request: NextRequest) {
 
     if (matches.length === 0) return success([]);
 
-    const otherIds = matches.map((m) => (m.user1Id === userId ? m.user2Id : m.user1Id));
+    const otherIds = matches.map((m: { user1Id: string; user2Id: string }) =>
+      m.user1Id === userId ? m.user2Id : m.user1Id
+    );
     const users = await prisma.user.findMany({
       where: { id: { in: otherIds } },
       include: {
@@ -87,9 +89,13 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const byId = new Map(users.map((u) => [u.id, u]));
+    type MatchUser = Parameters<typeof formatMatch>[0];
+
+    const byId = new Map<string, MatchUser>(
+      users.map((u: MatchUser) => [u.id, u])
+    );
     const list = matches
-      .map((m) => {
+      .map((m: { user1Id: string; user2Id: string; matchedAt: Date }) => {
         const otherId = m.user1Id === userId ? m.user2Id : m.user1Id;
         const other = byId.get(otherId);
         if (!other?.profile) return null;

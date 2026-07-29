@@ -1,8 +1,36 @@
 import React from "react";
 import { prisma } from "../../lib/prisma";
 
+type RecentProfile = {
+  id: string;
+  name: string;
+  age: number;
+  city: string;
+  avatarUrl: string;
+  isPremium: boolean;
+  isVerified: boolean;
+};
+
+type ActiveHangout = {
+  id: string;
+  title: string;
+  creator: string;
+  count: number;
+  joined: number;
+};
+
+type DashboardData = {
+  totalUsers: number;
+  totalMatches: number;
+  onlineUsers: number;
+  premiumUsers: number;
+  recentProfiles: RecentProfile[];
+  activeHangouts: ActiveHangout[];
+  isFallback: boolean;
+};
+
 // Mock Fallback Data in case MariaDB is not running locally
-const mockStats = {
+const mockStats: Omit<DashboardData, "isFallback"> = {
   totalUsers: 428,
   totalMatches: 94,
   onlineUsers: 152,
@@ -19,14 +47,13 @@ const mockStats = {
   ]
 };
 
-async function getDashboardData() {
+async function getDashboardData(): Promise<DashboardData> {
   try {
-    // Attempt DB operations
     const totalUsers = await prisma.user.count();
     const totalMatches = await prisma.match.count();
     const onlineUsers = await prisma.profile.count({ where: { isOnline: true } });
     const premiumUsers = await prisma.profile.count({ where: { isPremium: true } });
-    
+
     const dbProfiles = await prisma.profile.findMany({
       take: 4,
       orderBy: { createdAt: "desc" },
@@ -41,7 +68,7 @@ async function getDashboardData() {
       }
     });
 
-    const recentProfiles = dbProfiles.map((p: {
+    const recentProfiles: RecentProfile[] = dbProfiles.map((p: {
       id: string;
       firstName: string | null;
       age: number | null;
@@ -71,7 +98,7 @@ async function getDashboardData() {
       }
     });
 
-    const activeHangouts = dbHangouts.map((h: {
+    const activeHangouts: ActiveHangout[] = dbHangouts.map((h: {
       id: string;
       title: string;
       creator: { name: string };
@@ -94,8 +121,7 @@ async function getDashboardData() {
       activeHangouts,
       isFallback: false
     };
-  } catch (error) {
-    // Graceful fallback to mock stats
+  } catch {
     return {
       ...mockStats,
       isFallback: true
@@ -150,7 +176,7 @@ export default async function DashboardPage() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
           <h4 className="text-base font-bold text-zinc-200 mb-6">Recent Signups</h4>
           <div className="space-y-4">
-            {data.recentProfiles.map((p) => (
+            {data.recentProfiles.map((p: RecentProfile) => (
               <div key={p.id} className="flex items-center justify-between p-3 rounded-xl bg-zinc-800/20 border border-zinc-800/40">
                 <div className="flex items-center gap-4">
                   <img src={p.avatarUrl} alt={p.name} className="w-10 h-10 rounded-full object-cover border border-zinc-700" />
@@ -176,7 +202,7 @@ export default async function DashboardPage() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
           <h4 className="text-base font-bold text-zinc-200 mb-6">Active Travel & Hangout Plans</h4>
           <div className="space-y-4">
-            {data.activeHangouts.map((h) => (
+            {data.activeHangouts.map((h: ActiveHangout) => (
               <div key={h.id} className="p-4 rounded-xl bg-zinc-800/20 border border-zinc-800/40 space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-bold text-white">{h.title}</span>
@@ -188,8 +214,8 @@ export default async function DashboardPage() {
                     <span className="font-bold text-white">{h.joined} / {h.count}</span>
                   </div>
                   <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
-                    <div 
-                      className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500" 
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
                       style={{ width: `${(h.joined / h.count) * 100}%` }}
                     />
                   </div>

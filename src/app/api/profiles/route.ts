@@ -136,14 +136,16 @@ export async function GET(request: NextRequest) {
           where: { senderId: userId },
           select: { receiverId: true },
         })
-      ).map((s) => s.receiverId);
+      ).map((s: { receiverId: string }) => s.receiverId);
 
       const matchedIds = (
         await prisma.match.findMany({
           where: { OR: [{ user1Id: userId }, { user2Id: userId }] },
           select: { user1Id: true, user2Id: true },
         })
-      ).map((m) => (m.user1Id === userId ? m.user2Id : m.user1Id));
+      ).map((m: { user1Id: string; user2Id: string }) =>
+        m.user1Id === userId ? m.user2Id : m.user1Id
+      );
 
       excludeIds = [...new Set([userId, ...swipedIds, ...matchedIds])];
     }
@@ -190,8 +192,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    type ProfileRow = Parameters<typeof formatProfile>[0];
+
     let formatted = profiles
-      .map((p) =>
+      .map((p: ProfileRow) =>
         formatProfile(p, myCity, myProfile?.latitude, myProfile?.longitude, mode)
       )
       .filter((p) => p.distance <= maxDistance)
@@ -213,7 +217,7 @@ export async function GET(request: NextRequest) {
         },
       });
       formatted = nearby
-        .map((p) => formatProfile(p, myCity, myProfile?.latitude, myProfile?.longitude, mode))
+        .map((p: ProfileRow) => formatProfile(p, myCity, myProfile?.latitude, myProfile?.longitude, mode))
         .filter((p) => p.distance <= maxDistance)
         .sort((a, b) => a.distance - b.distance)
         .slice(0, limit);
