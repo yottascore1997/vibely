@@ -23,7 +23,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (hangout.creatorId !== hostId) return error("Only the host can remove people", 403);
     if (targetUserId === hostId) return error("Host cannot remove themselves", 400);
 
-    const membership = hangout.participants.find((p) => p.userId === targetUserId);
+    const membership = hangout.participants.find((p: { id: string; userId: string }) => p.userId === targetUserId);
     if (!membership) return error("User is not in this plan", 400);
 
     await prisma.participant.delete({ where: { id: membership.id } });

@@ -40,7 +40,10 @@ function formatMatch(
     isVerified: p?.isVerified,
     isOnline: p?.isOnline,
     avatarUrl: p?.avatarUrl || p?.photos[0]?.url,
-    interests: p?.interests.map((i) => ({ name: i.interest.name, color: i.interest.color || "#8A56FF" })) || [],
+    interests: p?.interests.map((i: { interest: { name: string; color: string | null } }) => ({
+      name: i.interest.name,
+      color: i.interest.color || "#8A56FF",
+    })) || [],
     matchedAt: matchedAt?.toISOString(),
     socialStatus: other.socialStatus
       ? {

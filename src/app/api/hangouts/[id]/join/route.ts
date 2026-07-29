@@ -17,7 +17,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     });
 
     if (!hangout) return error("Plan not found", 404);
-    if (hangout.participants.some((p) => p.userId === userId)) {
+    if (hangout.participants.some((p: { userId: string }) => p.userId === userId)) {
       return success({ message: "Already joined", going: hangout.participants.length });
     }
     if (hangout.participants.length >= hangout.maxParticipants) {

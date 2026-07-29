@@ -56,8 +56,10 @@ function formatProfile(
       return Math.min(99, base + (p.isVerified ? 2 : 0) + (p.isOnline ? 1 : 0));
     })(),
     avatarUrl: p.avatarUrl || p.photos[0]?.url,
-    photos: p.photos.map((ph) => ph.url),
-    interests: p.interests.map((ui) => ({
+    photos: p.photos.map((ph: { url: string }) => ph.url),
+    interests: p.interests.map((ui: {
+      interest: { name: string; color: string | null; icon: string | null };
+    }) => ({
       name: ui.interest.name,
       color: ui.interest.color,
       icon: ui.interest.icon,
@@ -198,8 +200,8 @@ export async function GET(request: NextRequest) {
       .map((p: ProfileRow) =>
         formatProfile(p, myCity, myProfile?.latitude, myProfile?.longitude, mode)
       )
-      .filter((p) => p.distance <= maxDistance)
-      .sort((a, b) => a.distance - b.distance)
+      .filter((p: { distance: number }) => p.distance <= maxDistance)
+      .sort((a: { distance: number }, b: { distance: number }) => a.distance - b.distance)
       .slice(0, limit);
 
     if (formatted.length === 0 && myCity) {
@@ -218,8 +220,8 @@ export async function GET(request: NextRequest) {
       });
       formatted = nearby
         .map((p: ProfileRow) => formatProfile(p, myCity, myProfile?.latitude, myProfile?.longitude, mode))
-        .filter((p) => p.distance <= maxDistance)
-        .sort((a, b) => a.distance - b.distance)
+        .filter((p: { distance: number }) => p.distance <= maxDistance)
+        .sort((a: { distance: number }, b: { distance: number }) => a.distance - b.distance)
         .slice(0, limit);
     }
 

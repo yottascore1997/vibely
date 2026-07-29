@@ -58,7 +58,10 @@ function formatPlan(h: {
     creatorId: h.creatorId,
     creatorName: h.creator.name,
     creatorAvatar: h.creator.profile?.avatarUrl,
-    participants: h.participants.map((p) => ({
+    participants: h.participants.map((p: {
+      userId: string;
+      user: { name: string; profile: { avatarUrl: string | null } | null };
+    }) => ({
       id: p.userId,
       name: p.user.name,
       avatarUrl: p.user.profile?.avatarUrl,
@@ -128,7 +131,9 @@ export async function GET(request: NextRequest) {
       orderBy: { scheduledAt: "asc" },
     });
 
-    let list = hangouts.map(formatPlan);
+    let list: ReturnType<typeof formatPlan>[] = hangouts.map(
+      (h: Parameters<typeof formatPlan>[0]) => formatPlan(h)
+    );
 
     // Apply Friends-Only vs Public Privacy & Visibility Filter
     const visParam = (searchParams.get("visibility") || searchParams.get("audience") || "").toLowerCase();
