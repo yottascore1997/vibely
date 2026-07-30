@@ -88,7 +88,7 @@ export async function POST(
     }
 
     const isCreator = hangout.creatorId === auth.userId;
-    const isParticipant = hangout.participants.some((p) => p.userId === auth.userId);
+    const isParticipant = hangout.participants.some((p: { userId: string }) => p.userId === auth.userId);
 
     if (!isCreator && !isParticipant) {
       return error("You are not a participant in this hangout", 403);

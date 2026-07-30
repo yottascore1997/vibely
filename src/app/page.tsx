@@ -3,489 +3,272 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  ArrowRight,
+  Apple,
   Play,
-  Coffee,
-  Clapperboard,
-  Plane,
-  UtensilsCrossed,
-  Dumbbell,
-  Music2,
-  Camera,
-  MapPin,
   Heart,
-  Users,
-  Sparkles,
-  MessageCircleHeart,
-  CalendarHeart,
-  Check,
-  Quote,
-  Crown,
-  Flame,
+  Coffee,
+  Plane,
+  Clapperboard,
+  Dumbbell,
+  UtensilsCrossed,
+  Gamepad2,
+  BookOpen,
+  Mountain,
+  Footprints,
+  Camera,
+  ShieldCheck,
+  Lock,
+  MapPinned,
+  EyeOff,
   Star,
-  Shield,
+  Users,
+  Handshake,
+  Binoculars,
+  Check,
 } from "lucide-react";
 import SiteLayout from "@/components/site/SiteLayout";
 
-const fadeUp = {
+const fade = {
   hidden: { opacity: 0, y: 28 },
   show: (i = 0) => ({
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.55,
-      delay: i * 0.08,
-      ease: [0.22, 1, 0.36, 1] as const,
-    },
+    transition: { duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] as const },
   }),
 };
 
-const INTERESTS = [
-  {
-    icon: Coffee,
-    label: "Coffee",
-    count: "1.2K+",
-    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=200&q=80",
-  },
-  {
-    icon: Clapperboard,
-    label: "Movies",
-    count: "980+",
-    image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=200&q=80",
-  },
-  {
-    icon: Plane,
-    label: "Travel",
-    count: "2.1K+",
-    image: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=200&q=80",
-  },
-  {
-    icon: UtensilsCrossed,
-    label: "Dinner",
-    count: "1.5K+",
-    image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=200&q=80",
-  },
-  {
-    icon: Dumbbell,
-    label: "Gym",
-    count: "760+",
-    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200&q=80",
-  },
-  {
-    icon: Music2,
-    label: "Music",
-    count: "1.1K+",
-    image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&q=80",
-  },
-  {
-    icon: Camera,
-    label: "Photos",
-    count: "5K+",
-    image: "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=200&q=80",
-  },
+const FLOAT_ICONS = [
+  { icon: Coffee, color: "from-amber-400 to-orange-500", pos: "left-2 top-16 float-a", size: "h-14 w-14" },
+  { icon: Plane, color: "from-sky-400 to-blue-500", pos: "right-4 top-10 float-b", size: "h-14 w-14" },
+  { icon: Clapperboard, color: "from-violet-400 to-purple-600", pos: "left-0 bottom-28 float-c", size: "h-12 w-12" },
+  { icon: Dumbbell, color: "from-rose-400 to-pink-500", pos: "right-0 bottom-24 float-a", size: "h-12 w-12" },
+  { icon: Camera, color: "from-fuchsia-400 to-pink-500", pos: "right-8 top-1/2 float-b", size: "h-11 w-11" },
+  { icon: UtensilsCrossed, color: "from-lime-400 to-green-500", pos: "left-6 top-1/2 float-c", size: "h-11 w-11" },
 ];
 
-const EVENTS = [
-  {
-    title: "Beach Bonfire Night",
-    place: "Juhu Beach, Mumbai",
-    meta: "Sat · 7:00 PM",
-    going: "24 going",
-    image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=80",
-  },
-  {
-    title: "Rooftop Acoustic",
-    place: "Indiranagar, Bangalore",
-    meta: "Tonight · 8:30 PM",
-    going: "18 going",
-    image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=900&q=80",
-  },
-  {
-    title: "Sunday Cycling Club",
-    place: "Marine Drive, Mumbai",
-    meta: "Sun · 6:00 AM",
-    going: "31 going",
-    image: "https://images.unsplash.com/photo-1541625601330-45acd7276d19?w=900&q=80",
-  },
-  {
-    title: "Cafe Hop & Chat",
-    place: "Koregaon Park, Pune",
-    meta: "Fri · 5:00 PM",
-    going: "12 going",
-    image: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=900&q=80",
-  },
-];
-
-const PEOPLE = [
-  {
-    name: "Rohan",
-    age: 26,
-    city: "Pune",
-    tags: ["Travel", "Music"],
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=700&q=80",
-  },
-  {
-    name: "Meher",
-    age: 24,
-    city: "Bangalore",
-    tags: ["Art", "Coffee"],
-    image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=700&q=80",
-  },
-  {
-    name: "Kabir",
-    age: 27,
-    city: "Delhi",
-    tags: ["Gym", "Food"],
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=700&q=80",
-  },
-  {
-    name: "Aanya",
-    age: 25,
-    city: "Mumbai",
-    tags: ["Movies", "Walks"],
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=700&q=80",
-  },
+const ACTIVITIES = [
+  { icon: Coffee, label: "Coffee Date", tint: "bg-amber-50 text-amber-600" },
+  { icon: Plane, label: "Travel Buddy", tint: "bg-sky-50 text-sky-600" },
+  { icon: Clapperboard, label: "Movie Night", tint: "bg-violet-50 text-violet-600" },
+  { icon: Dumbbell, label: "Gym Partner", tint: "bg-rose-50 text-rose-600" },
+  { icon: UtensilsCrossed, label: "Food Explorer", tint: "bg-orange-50 text-orange-600" },
+  { icon: Gamepad2, label: "Gaming", tint: "bg-indigo-50 text-indigo-600" },
+  { icon: BookOpen, label: "Study Partner", tint: "bg-emerald-50 text-emerald-600" },
+  { icon: Mountain, label: "Weekend Trips", tint: "bg-teal-50 text-teal-600" },
+  { icon: Footprints, label: "Walking Buddy", tint: "bg-pink-50 text-pink-600" },
+  { icon: Camera, label: "Photography", tint: "bg-fuchsia-50 text-fuchsia-600" },
 ];
 
 const STEPS = [
   {
     n: "01",
-    title: "Create Profile",
-    desc: "Add photos, interests & your city vibe in minutes.",
-    icon: Users,
+    title: "Discover",
+    desc: "Find people nearby who match your vibe and interests.",
+    icon: Binoculars,
   },
   {
     n: "02",
-    title: "Discover People",
-    desc: "Swipe through curated matches near you.",
-    icon: Sparkles,
+    title: "Connect",
+    desc: "Send a request and start chatting instantly.",
+    icon: Users,
   },
   {
     n: "03",
-    title: "Match & Chat",
-    desc: "Start a conversation when the vibe is mutual.",
-    icon: MessageCircleHeart,
+    title: "Meet",
+    desc: "Plan, meet up, and create real moments.",
+    icon: Handshake,
   },
-  {
-    n: "04",
-    title: "Meet Offline",
-    desc: "Join hangouts and create real moments.",
-    icon: CalendarHeart,
-  },
+];
+
+const STATS = [
+  { value: "100K+", label: "Members" },
+  { value: "500K+", label: "Meetups" },
+  { value: "120+", label: "Cities" },
+  { value: "98%", label: "Positive" },
+];
+
+const SAFETY = [
+  { icon: ShieldCheck, title: "Verified Profiles", desc: "Real people, real photos." },
+  { icon: MapPinned, title: "Location Control", desc: "Share only when you want." },
+  { icon: Lock, title: "Secure Chat", desc: "Private & encrypted messaging." },
+  { icon: EyeOff, title: "Privacy First", desc: "You own your data always." },
 ];
 
 const REVIEWS = [
   {
+<<<<<<< HEAD
     quote: "I joined a coffee hangout and met my now-best friend. Hangora feels real, not fake.",
+=======
+    quote: "Met my travel buddy for Goa in two days. Hangora just works.",
+>>>>>>> d5f0b647e653ab5fcc1a6e0e71a516d1b5d5e807
     name: "Priya S.",
     city: "Mumbai",
     image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80",
   },
   {
-    quote: "The events map is addictive. I found plans every weekend without awkward DMs.",
+    quote: "Coffee hangouts every weekend. Feels safe and genuine.",
     name: "Arjun M.",
     city: "Bangalore",
     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80",
   },
   {
-    quote: "Premium is worth it — seeing who liked me saved so much time. Clean and classy.",
+    quote: "Finally an app for real plans, not endless swiping.",
     name: "Sana K.",
     city: "Delhi",
     image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80",
   },
 ];
 
-const AVATARS = [
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80",
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80",
-  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&q=80",
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80",
+const NEARBY = [
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=80",
+  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=80",
+  "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120&q=80",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=80",
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80",
 ];
 
-const PERKS = [
-  { icon: Flame, label: "Hot matches daily" },
-  { icon: Shield, label: "Verified profiles" },
-  { icon: Star, label: "Priority discovery" },
+const PHONE_PROFILES = [
+  {
+    name: "Aanya, 24",
+    tag: "Coffee",
+    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80",
+  },
+  {
+    name: "Rohan, 26",
+    tag: "Travel",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80",
+  },
 ];
 
 export default function HomePage() {
   return (
     <SiteLayout>
       {/* HERO */}
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://images.unsplash.com/photo-1516589178581-6cd1754035e0?w=1600&q=80"
-            alt=""
-            className="h-full w-full object-cover opacity-[0.12]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#07070b] via-[#07070b]/85 to-[#07070b]" />
-        </div>
-        <div className="pointer-events-none absolute -left-20 top-10 h-80 w-80 rounded-full bg-vibe-pink/30 blur-[100px]" />
-        <div className="pointer-events-none absolute -right-10 top-20 h-96 w-96 rounded-full bg-[#e8c547]/15 blur-[110px]" />
-
-        <div className="site-wrap relative grid items-center gap-12 pb-16 pt-12 lg:grid-cols-2 lg:gap-16 lg:pb-24 lg:pt-16">
-          <motion.div initial="hidden" animate="show" variants={fadeUp} custom={0}>
-            <span className="glass inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-bold text-vibe-pink">
-              <Sparkles className="h-3.5 w-3.5" />
-              Meet people. Create memories.
+      <section className="relative overflow-hidden pb-10 pt-10 lg:pb-16 lg:pt-14">
+        <div className="site-wrap grid items-center gap-12 lg:grid-cols-2 lg:gap-8">
+          <motion.div initial="hidden" animate="show" variants={fade} custom={0}>
+            <span className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-white px-3.5 py-1.5 text-xs font-bold text-vibe-purple shadow-sm">
+              <Heart className="h-3.5 w-3.5 fill-vibe-purple" />
+              Meet. Connect. Hangout.
             </span>
 
-            <h1 className="mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[3.6rem]">
-              Find your vibe. Create real{" "}
-              <span className="font-script pink-text text-5xl font-normal sm:text-6xl lg:text-7xl">
-                connections
-              </span>
-              .
+            <h1 className="mt-5 text-4xl font-extrabold leading-[1.12] tracking-tight text-[#1a1030] sm:text-5xl lg:text-[3.4rem]">
+              Meet <span className="grad-text">Real People.</span>
+              <br />
+              Create <span className="grad-text">Real Moments.</span>
             </h1>
 
-            <p className="mt-5 max-w-lg text-[15px] font-medium leading-relaxed text-vibe-muted sm:text-base">
-              Discover amazing people nearby, join local events, and turn online matches into real-life hangouts.
+            <p className="mt-5 max-w-md text-[15px] font-medium leading-relaxed text-[#6b6280]">
+              Find people nearby for coffee, travel, movies, gym and more — then turn chats into real hangouts.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/auth"
-                className="pink-gradient inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold text-white shadow-[var(--shadow-pink)] transition hover:scale-[1.03]"
+                className="purple-gradient inline-flex items-center rounded-full px-7 py-3.5 text-sm font-bold text-white shadow-[var(--shadow-purple)] transition hover:scale-[1.03]"
               >
+<<<<<<< HEAD
                 Join Hangora Now
                 <ArrowRight className="h-4 w-4" />
+=======
+                Download App
+>>>>>>> d5f0b647e653ab5fcc1a6e0e71a516d1b5d5e807
               </Link>
               <a
-                href="#how"
-                className="glass inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold text-white transition hover:border-vibe-pink/40"
+                href="#features"
+                className="inline-flex items-center gap-2 rounded-full border-2 border-violet-200 bg-white px-6 py-3.5 text-sm font-bold text-[#1a1030] transition hover:border-violet-400"
               >
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-vibe-pink/20 text-vibe-pink">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-100 text-vibe-purple">
                   <Play className="h-3 w-3 fill-current" />
                 </span>
-                How it works
+                Explore Hangora
               </a>
             </div>
 
-            <div className="mt-8 flex flex-wrap items-center gap-5">
-              <div className="flex items-center gap-3">
-                <div className="flex -space-x-2.5">
-                  {AVATARS.map((src) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      key={src}
-                      src={src}
-                      alt=""
-                      className="h-9 w-9 rounded-full border-2 border-[#07070b] object-cover"
-                    />
-                  ))}
-                </div>
-                <p className="text-sm font-semibold text-vibe-muted">
-                  <span className="text-vibe-pink">20K+</span> already joined
-                </p>
-              </div>
-              <div className="hidden h-8 w-px bg-white/10 sm:block" />
-              <div className="flex gap-3">
-                {PERKS.map((p) => {
-                  const Icon = p.icon;
-                  return (
-                    <span
-                      key={p.label}
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-vibe-muted"
-                    >
-                      <Icon className="h-3.5 w-3.5 text-vibe-gold" />
-                      {p.label}
-                    </span>
-                  );
-                })}
-              </div>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <a
+                href="/auth"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#1a1030] px-4 py-2.5 text-xs font-bold text-white"
+              >
+                <Apple className="h-3.5 w-3.5" /> App Store
+              </a>
+              <a
+                href="/auth"
+                className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-white px-4 py-2.5 text-xs font-bold text-[#1a1030]"
+              >
+                <Play className="h-3.5 w-3.5 fill-current" /> Google Play
+              </a>
             </div>
           </motion.div>
 
+          {/* Phone + floating icons */}
           <motion.div
-            className="relative mx-auto h-[440px] w-full max-w-md sm:h-[500px]"
+            className="relative mx-auto h-[520px] w-full max-w-md"
             initial={{ opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.15 }}
           >
-            <div className="float-a absolute left-0 top-16 w-[42%] overflow-hidden rounded-[24px] border border-white/10 shadow-[var(--shadow)]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&q=80"
-                alt=""
-                className="aspect-[3/4] w-full object-cover"
-              />
-            </div>
-            <div className="float-c absolute right-0 top-10 w-[42%] overflow-hidden rounded-[24px] border border-white/10 shadow-[var(--shadow)]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500&q=80"
-                alt=""
-                className="aspect-[3/4] w-full object-cover"
-              />
-            </div>
-            <div className="float-b absolute left-1/2 top-0 z-10 w-[58%] -translate-x-1/2 overflow-hidden rounded-[28px] border-2 border-vibe-pink/40 shadow-[var(--shadow-pink)]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=700&q=80"
-                alt="Ananya"
-                className="aspect-[3/4] w-full object-cover"
-              />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-4 pt-20 text-white">
-                <p className="text-lg font-extrabold">Ananya, 24</p>
-                <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-white/85">
-                  <MapPin className="h-3 w-3 text-vibe-pink" /> Mumbai
-                </p>
+            {FLOAT_ICONS.map((f) => {
+              const Icon = f.icon;
+              return (
+                <div
+                  key={f.color + f.pos}
+                  className={`absolute z-20 ${f.pos} ${f.size} ${f.size.includes("14") ? "" : ""}`}
+                >
+                  <div
+                    className={`icon-3d ${f.size} bg-gradient-to-br ${f.color} text-white shadow-lg`}
+                  >
+                    <Icon className="h-6 w-6" strokeWidth={2} />
+                  </div>
+                </div>
+              );
+            })}
+
+            <div className="absolute bottom-6 left-1/2 h-8 w-[70%] -translate-x-1/2 rounded-[100%] bg-violet-400/30 blur-2xl" />
+            <div className="absolute left-1/2 top-8 z-10 w-[230px] -translate-x-1/2 sm:w-[250px]">
+              <div className="phone-frame">
+                <div className="phone-notch" />
+                <div className="overflow-hidden rounded-[28px] bg-[#faf8ff]">
+                  <div className="flex items-center justify-between px-4 pb-2 pt-3">
+                    <p className="text-xs font-extrabold text-[#1a1030]">Nearby</p>
+                    <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-vibe-purple">
+                      Live
+                    </span>
+                  </div>
+                  <div className="space-y-2.5 px-3 pb-4">
+                    {PHONE_PROFILES.map((p) => (
+                      <div key={p.name} className="overflow-hidden rounded-2xl bg-white shadow-sm">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={p.image} alt="" className="h-28 w-full object-cover" />
+                        <div className="flex items-center justify-between px-3 py-2">
+                          <div>
+                            <p className="text-xs font-extrabold text-[#1a1030]">{p.name}</p>
+                            <p className="text-[10px] font-semibold text-vibe-purple">{p.tag}</p>
+                          </div>
+                          <span className="purple-gradient flex h-7 w-7 items-center justify-center rounded-full text-white">
+                            <Heart className="h-3 w-3 fill-white" />
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <button
-                type="button"
-                className="pink-gradient absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full text-white shadow-lg"
-              >
-                <Heart className="h-5 w-5 fill-white" />
-              </button>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* INTERESTS */}
-      <section className="border-y border-white/8 bg-black/30 py-8">
-        <div className="site-wrap flex gap-3 overflow-x-auto pb-1">
-          {INTERESTS.map((item, i) => {
-            const Icon = item.icon;
-            return (
-              <motion.button
-                key={item.label}
-                type="button"
-                custom={i}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                whileHover={{ y: -4, scale: 1.03 }}
-                className="glass relative flex min-w-[132px] flex-1 shrink-0 flex-col items-center overflow-hidden rounded-2xl px-3 pb-4 pt-3"
-              >
-                <div className="relative mb-2 h-14 w-14 overflow-hidden rounded-2xl">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.image} alt="" className="h-full w-full object-cover" />
-                  <div className="absolute inset-0 bg-black/35" />
-                  <Icon className="absolute inset-0 m-auto h-5 w-5 text-white drop-shadow" strokeWidth={2} />
-                </div>
-                <span className="text-sm font-bold text-white">{item.label}</span>
-                <span className="mt-0.5 text-[11px] font-semibold text-vibe-pink">{item.count} people</span>
-              </motion.button>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* EVENTS */}
-      <section className="site-wrap py-16 sm:py-20">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-vibe-pink">Tonight & this week</p>
-            <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-              Popular Events Near You
-            </h2>
-          </div>
-          <Link href="/events" className="hidden text-sm font-bold text-vibe-pink sm:inline-flex">
-            View all events →
-          </Link>
-        </div>
-
-        <div className="mt-8 flex gap-5 overflow-x-auto pb-2 md:grid md:grid-cols-4 md:overflow-visible">
-          {EVENTS.map((e, i) => (
-            <motion.article
-              key={e.title}
-              custom={i}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: "-40px" }}
-              variants={fadeUp}
-              whileHover={{ y: -8 }}
-              className="relative min-w-[260px] overflow-hidden rounded-[28px] border border-white/10 shadow-[var(--shadow)] md:min-w-0"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={e.image} alt={e.title} className="h-80 w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-              <div className="absolute left-3 top-3 flex gap-2">
-                <span className="pink-gradient rounded-full px-2.5 py-1 text-[10px] font-bold text-white">
-                  {e.going}
-                </span>
-                <span className="rounded-full bg-black/50 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur">
-                  {e.meta}
-                </span>
-              </div>
-              <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-                <h3 className="text-lg font-extrabold">{e.title}</h3>
-                <p className="mt-1 inline-flex items-center gap-1 text-xs text-white/85">
-                  <MapPin className="h-3 w-3 text-vibe-pink" /> {e.place}
-                </p>
-              </div>
-            </motion.article>
-          ))}
-        </div>
-      </section>
-
-      {/* PEOPLE */}
-      <section className="border-y border-white/8 bg-[#0c0c12]/80 py-16 sm:py-20">
-        <div className="site-wrap">
-          <div className="text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-vibe-pink">Nearby vibes</p>
-            <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-              Discover Amazing People
-            </h2>
-          </div>
-
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {PEOPLE.map((p, i) => (
-              <motion.article
-                key={p.name}
-                custom={i}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                whileHover={{ y: -8 }}
-                className="soft-card relative overflow-hidden p-3"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.image} alt={p.name} className="aspect-[4/5] w-full rounded-[20px] object-cover" />
-                <div className="p-3 pt-4">
-                  <h3 className="text-lg font-extrabold text-white">
-                    {p.name}, {p.age}
-                  </h3>
-                  <p className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-vibe-muted">
-                    <MapPin className="h-3 w-3 text-vibe-pink" /> {p.city}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {p.tags.map((t) => (
-                      <span
-                        key={t}
-                        className="rounded-full border border-vibe-pink/30 bg-vibe-pink/10 px-2.5 py-1 text-[11px] font-bold text-vibe-pink"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="pink-gradient absolute bottom-6 right-5 flex h-10 w-10 items-center justify-center rounded-full text-white shadow-[var(--shadow-pink)]"
-                >
-                  <Heart className="h-4 w-4 fill-white" />
-                </button>
-              </motion.article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* PREMIUM */}
-      <section className="site-wrap py-10">
+      {/* PEOPLE AROUND YOU */}
+      <section id="features" className="site-wrap py-14 sm:py-20">
         <motion.div
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          variants={fadeUp}
-          className="premium-glow relative overflow-hidden rounded-[32px] p-6 sm:p-10"
+          variants={fade}
+          className="text-center"
         >
+<<<<<<< HEAD
           <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr_1fr]">
             <div>
               <span className="gold-gradient inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold text-black">
@@ -500,49 +283,129 @@ export default function HomePage() {
               <Link
                 href="/auth"
                 className="gold-gradient mt-6 inline-flex rounded-full px-6 py-3 text-sm font-bold text-black shadow-lg transition hover:scale-[1.03]"
+=======
+          <h2 className="text-3xl font-extrabold tracking-tight text-[#1a1030] sm:text-4xl">
+            People Around You <span className="grad-text">Right Now.</span>
+          </h2>
+        </motion.div>
+
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          variants={fade}
+          custom={1}
+          className="relative mt-10 overflow-hidden rounded-[32px] map-glow p-6 sm:p-10"
+        >
+          <div
+            className="absolute inset-0 opacity-30"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(167,139,250,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(167,139,250,0.35) 1px, transparent 1px)",
+              backgroundSize: "48px 48px",
+            }}
+          />
+          <svg className="absolute inset-0 h-full w-full opacity-40" aria-hidden>
+            <line x1="20%" y1="35%" x2="45%" y2="50%" stroke="#c4b5fd" strokeWidth="2" />
+            <line x1="45%" y1="50%" x2="70%" y2="30%" stroke="#f0abfc" strokeWidth="2" />
+            <line x1="45%" y1="50%" x2="75%" y2="65%" stroke="#a78bfa" strokeWidth="2" />
+            <line x1="20%" y1="35%" x2="30%" y2="70%" stroke="#ddd6fe" strokeWidth="2" />
+          </svg>
+
+          <div className="relative mx-auto flex h-[280px] max-w-3xl items-center justify-center sm:h-[320px]">
+            {[
+              { top: "18%", left: "18%" },
+              { top: "22%", left: "68%" },
+              { top: "48%", left: "42%" },
+              { top: "62%", left: "22%" },
+              { top: "58%", left: "72%" },
+            ].map((pos, i) => (
+              <div
+                key={NEARBY[i]}
+                className="absolute"
+                style={{ top: pos.top, left: pos.left }}
+>>>>>>> d5f0b647e653ab5fcc1a6e0e71a516d1b5d5e807
               >
-                Try Premium Now
-              </Link>
-            </div>
+                <span className="absolute -inset-2 animate-ping rounded-full bg-violet-400/30" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={NEARBY[i]}
+                  alt=""
+                  className="relative h-12 w-12 rounded-full border-2 border-white object-cover shadow-lg sm:h-14 sm:w-14"
+                />
+              </div>
+            ))}
 
-            <ul className="space-y-3">
-              {["See who liked you", "Unlimited likes", "Advanced filters", "Priority in Discover"].map((f) => (
-                <li key={f} className="flex items-center gap-2.5 text-sm font-semibold text-white">
-                  <span className="pink-gradient flex h-6 w-6 items-center justify-center rounded-full text-white">
-                    <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                  </span>
-                  {f}
-                </li>
-              ))}
-            </ul>
-
-            <div className="relative mx-auto w-full max-w-xs">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?w=700&q=80"
-                alt="Couple"
-                className="aspect-[4/3] w-full rounded-[24px] object-cover shadow-2xl ring-2 ring-vibe-pink/40"
-              />
-              <div className="glass absolute -bottom-3 left-4 right-4 rounded-2xl p-3">
-                <p className="text-xs font-extrabold text-vibe-pink">It&apos;s a Match!</p>
-                <p className="mt-0.5 text-[11px] text-vibe-muted">You and Aanya liked each other</p>
+            <div className="glass absolute bottom-2 left-2 max-w-[240px] rounded-2xl p-3 shadow-xl sm:left-6 sm:bottom-4">
+              <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={NEARBY[0]}
+                  alt=""
+                  className="h-10 w-10 rounded-full object-cover"
+                />
+                <div>
+                  <p className="text-xs font-bold text-[#1a1030]">Wants coffee ☕</p>
+                  <p className="text-[11px] font-semibold text-vibe-purple">1.2 km away</p>
+                </div>
               </div>
             </div>
           </div>
         </motion.div>
       </section>
 
+      {/* ACTIVITIES */}
+      <section className="bg-white/60 py-14 sm:py-20">
+        <div className="site-wrap">
+          <div className="text-center">
+            <h2 className="text-3xl font-extrabold tracking-tight text-[#1a1030] sm:text-4xl">
+              What Do You Feel Like <span className="grad-text">Today?</span>
+            </h2>
+          </div>
+
+          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 md:gap-4">
+            {ACTIVITIES.map((a, i) => {
+              const Icon = a.icon;
+              return (
+                <motion.button
+                  key={a.label}
+                  type="button"
+                  custom={i}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true }}
+                  variants={fade}
+                  whileHover={{ y: -6, scale: 1.03 }}
+                  className="soft-card flex flex-col items-center gap-3 px-3 py-5"
+                >
+                  <span className={`icon-3d h-14 w-14 ${a.tint}`}>
+                    <Icon className="h-6 w-6" strokeWidth={2} />
+                  </span>
+                  <span className="text-center text-xs font-bold text-[#1a1030] sm:text-sm">
+                    {a.label}
+                  </span>
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* HOW IT WORKS */}
-      <section id="how" className="site-wrap py-16 sm:py-20">
+      <section id="how" className="site-wrap py-14 sm:py-20">
         <div className="text-center">
+<<<<<<< HEAD
           <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
             How <span className="font-script pink-text text-4xl font-normal sm:text-5xl">Hangora</span> Works
+=======
+          <h2 className="text-3xl font-extrabold tracking-tight text-[#1a1030] sm:text-4xl">
+            How <span className="grad-text">Hangora</span> Works
+>>>>>>> d5f0b647e653ab5fcc1a6e0e71a516d1b5d5e807
           </h2>
-          <p className="mt-2 text-sm font-medium text-vibe-muted">Four simple steps to real connections</p>
         </div>
 
-        <div className="relative mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="pointer-events-none absolute left-[12%] right-[12%] top-10 hidden h-px border-t-2 border-dashed border-vibe-pink/30 lg:block" />
+        <div className="relative mt-12 grid gap-8 md:grid-cols-3">
+          <div className="pointer-events-none absolute left-[16%] right-[16%] top-8 hidden h-0.5 bg-gradient-to-r from-violet-200 via-fuchsia-200 to-violet-200 md:block" />
           {STEPS.map((s, i) => {
             const Icon = s.icon;
             return (
@@ -552,34 +415,106 @@ export default function HomePage() {
                 initial="hidden"
                 whileInView="show"
                 viewport={{ once: true }}
-                variants={fadeUp}
+                variants={fade}
                 className="relative text-center"
               >
-                <div className="pink-gradient mx-auto flex h-14 w-14 items-center justify-center rounded-full text-sm font-extrabold text-white shadow-[var(--shadow-pink)]">
+                <div className="purple-gradient mx-auto flex h-14 w-14 items-center justify-center rounded-full text-sm font-extrabold text-white shadow-[var(--shadow-purple)]">
                   {s.n}
                 </div>
-                <div className="icon-tile mx-auto mt-5 h-16 w-16">
-                  <Icon className="h-7 w-7" strokeWidth={1.75} />
+                <div className="icon-3d mx-auto mt-5 h-20 w-20 text-vibe-purple">
+                  <Icon className="h-9 w-9" strokeWidth={1.75} />
                 </div>
-                <h3 className="mt-4 text-lg font-extrabold text-white">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-vibe-muted">{s.desc}</p>
+                <h3 className="mt-4 text-xl font-extrabold text-[#1a1030]">{s.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-[#6b6280]">{s.desc}</p>
               </motion.div>
             );
           })}
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
-      <section className="border-t border-white/8 bg-[#0c0c12]/80 py-16 sm:py-20">
-        <div className="site-wrap">
-          <div className="text-center">
-            <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-              What People Are Saying
+      {/* STATS */}
+      <section className="cta-banner py-10 text-white shadow-[var(--shadow-purple)]">
+        <div className="site-wrap grid grid-cols-2 gap-6 md:grid-cols-4">
+          {STATS.map((s) => (
+            <div key={s.label} className="text-center">
+              <p className="text-3xl font-extrabold tracking-tight sm:text-4xl">{s.value}</p>
+              <p className="mt-1 text-sm font-semibold text-violet-100">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* SAFETY */}
+      <section id="safety" className="site-wrap py-14 sm:py-20">
+        <div className="grid items-center gap-10 lg:grid-cols-2">
+          <div>
+            <h2 className="text-3xl font-extrabold tracking-tight text-[#1a1030] sm:text-4xl">
+              We&apos;ve Got Your <span className="grad-text">Back.</span>
             </h2>
+<<<<<<< HEAD
             <p className="mt-2 text-sm font-medium text-vibe-muted">Real stories from the Hangora community</p>
+=======
+            <ul className="mt-8 space-y-4">
+              {SAFETY.map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <motion.li
+                    key={item.title}
+                    custom={i}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true }}
+                    variants={fade}
+                    className="soft-card flex items-start gap-4 p-4"
+                  >
+                    <span className="icon-3d h-12 w-12 shrink-0 text-vibe-purple">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <p className="font-extrabold text-[#1a1030]">{item.title}</p>
+                      <p className="mt-0.5 text-sm text-[#6b6280]">{item.desc}</p>
+                    </div>
+                  </motion.li>
+                );
+              })}
+            </ul>
+>>>>>>> d5f0b647e653ab5fcc1a6e0e71a516d1b5d5e807
           </div>
 
-          <div className="mt-10 flex gap-5 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:overflow-visible">
+          <motion.div
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            variants={fade}
+            className="relative mx-auto flex h-[340px] w-full max-w-md items-center justify-center"
+          >
+            <div className="absolute h-56 w-56 rounded-full bg-violet-300/40 blur-3xl" />
+            <div className="purple-gradient relative flex h-48 w-48 items-center justify-center rounded-[40px] shadow-[var(--shadow-purple)] rotate-6">
+              <ShieldCheck className="h-24 w-24 text-white" strokeWidth={1.5} />
+              <span className="absolute -bottom-3 -right-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-vibe-purple shadow-lg">
+                <Check className="h-7 w-7" strokeWidth={3} />
+              </span>
+            </div>
+            <span className="icon-3d absolute left-6 top-8 h-12 w-12 float-a text-vibe-purple">
+              <Lock className="h-5 w-5" />
+            </span>
+            <span className="icon-3d absolute right-8 bottom-10 h-12 w-12 float-b text-vibe-purple">
+              <MapPinned className="h-5 w-5" />
+            </span>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section id="stories" className="bg-white/70 py-14 sm:py-20">
+        <div className="site-wrap">
+          <div className="text-center">
+            <h2 className="text-3xl font-extrabold tracking-tight text-[#1a1030] sm:text-4xl">
+              What Our Community <span className="grad-text">Says.</span>
+            </h2>
+          </div>
+
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
             {REVIEWS.map((r, i) => (
               <motion.article
                 key={r.name}
@@ -587,27 +522,102 @@ export default function HomePage() {
                 initial="hidden"
                 whileInView="show"
                 viewport={{ once: true }}
-                variants={fadeUp}
-                className="soft-card min-w-[280px] p-6 md:min-w-0"
+                variants={fade}
+                className="soft-card p-6"
               >
-                <Quote className="h-7 w-7 text-vibe-pink" />
-                <p className="mt-4 text-sm font-medium leading-relaxed text-white/90">&ldquo;{r.quote}&rdquo;</p>
+                <div className="flex gap-0.5 text-amber-400">
+                  {Array.from({ length: 5 }).map((_, idx) => (
+                    <Star key={idx} className="h-4 w-4 fill-current" />
+                  ))}
+                </div>
+                <p className="mt-4 text-sm font-medium leading-relaxed text-[#3d3554]">
+                  &ldquo;{r.quote}&rdquo;
+                </p>
                 <div className="mt-5 flex items-center gap-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={r.image}
                     alt={r.name}
-                    className="h-10 w-10 rounded-full object-cover ring-2 ring-vibe-pink/40"
+                    className="h-11 w-11 rounded-full object-cover ring-2 ring-violet-200"
                   />
                   <div>
-                    <p className="text-sm font-extrabold text-white">{r.name}</p>
-                    <p className="text-xs font-medium text-vibe-pink">{r.city}</p>
+                    <p className="text-sm font-extrabold text-[#1a1030]">{r.name}</p>
+                    <p className="text-xs font-semibold text-vibe-purple">{r.city}</p>
                   </div>
                 </div>
               </motion.article>
             ))}
           </div>
         </div>
+      </section>
+
+      {/* FINAL CTA */}
+      <section className="site-wrap py-14 sm:py-16">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          variants={fade}
+          className="cta-banner relative overflow-hidden rounded-[36px] px-6 py-12 text-white sm:px-12"
+        >
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/20 to-transparent" />
+          <div className="relative grid items-center gap-10 lg:grid-cols-[1.2fr_auto_1fr]">
+            <div>
+              <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+                Download Hangora & Start Your Journey.
+              </h2>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <a
+                  href="/auth"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-[#1a1030]"
+                >
+                  <Apple className="h-3.5 w-3.5" /> App Store
+                </a>
+                <a
+                  href="/auth"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2.5 text-xs font-bold text-white"
+                >
+                  <Play className="h-3.5 w-3.5 fill-current" /> Google Play
+                </a>
+              </div>
+            </div>
+
+            <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-2xl bg-white p-3 shadow-xl">
+              <div
+                className="h-full w-full rounded-lg"
+                style={{
+                  backgroundImage:
+                    "repeating-linear-gradient(0deg,#1a1030 0 2px,transparent 2px 4px), repeating-linear-gradient(90deg,#1a1030 0 2px,transparent 2px 4px)",
+                  backgroundSize: "8px 8px",
+                }}
+                aria-label="QR code"
+              />
+            </div>
+
+            <div className="relative mx-auto hidden h-48 w-56 lg:block">
+              <div className="phone-frame absolute left-0 top-4 w-28 rotate-[-8deg] scale-90">
+                <div className="overflow-hidden rounded-[22px]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300&q=80"
+                    alt=""
+                    className="aspect-[9/16] w-full object-cover"
+                  />
+                </div>
+              </div>
+              <div className="phone-frame absolute right-0 top-0 w-28 rotate-[8deg]">
+                <div className="overflow-hidden rounded-[22px]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&q=80"
+                    alt=""
+                    className="aspect-[9/16] w-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </section>
     </SiteLayout>
   );

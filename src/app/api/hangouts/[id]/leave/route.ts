@@ -20,7 +20,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return error("Host cannot leave — cancel the plan instead", 400);
     }
 
-    const membership = hangout.participants.find((p) => p.userId === userId);
+    const membership = hangout.participants.find((p: { id: string; userId: string }) => p.userId === userId);
     if (!membership) return error("You are not in this plan", 400);
 
     await prisma.participant.delete({ where: { id: membership.id } });

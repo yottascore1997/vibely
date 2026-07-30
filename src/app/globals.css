@@ -1,18 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #07070b;
-  --bg-soft: #12121a;
-  --bg-card: #16161f;
-  --ink: #f7f4f8;
-  --muted: #a89aab;
-  --faint: #6e6278;
-  --border: rgba(255, 255, 255, 0.08);
-  --pink: #ff3d7f;
-  --pink-hot: #ff1f6b;
-  --gold: #e8c547;
-  --shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-  --shadow-pink: 0 18px 48px rgba(255, 61, 127, 0.35);
+  --bg: #f7f4ff;
+  --bg-soft: #ffffff;
+  --bg-card: #ffffff;
+  --ink: #1a1030;
+  --muted: #6b6280;
+  --faint: #9b93ad;
+  --border: rgba(124, 58, 237, 0.12);
+  --purple: #7c3aed;
+  --purple-hot: #6d28d9;
+  --purple-soft: #a78bfa;
+  --violet: #8b5cf6;
+  --pink: #ec4899;
+  --pink-hot: #db2777;
+  --gold: #f0abfc;
+  --shadow: 0 20px 50px rgba(109, 40, 217, 0.12);
+  --shadow-pink: 0 16px 40px rgba(124, 58, 237, 0.25);
+  --shadow-purple: 0 16px 40px rgba(124, 58, 237, 0.28);
 }
 
 @theme inline {
@@ -23,10 +28,11 @@
   --color-vibe-muted: var(--muted);
   --color-vibe-faint: var(--faint);
   --color-vibe-border: var(--border);
-  --color-vibe-pink: var(--pink);
+  --color-vibe-pink: var(--purple);
+  --color-vibe-purple: var(--purple);
   --color-vibe-gold: var(--gold);
-  --font-sans: var(--font-plus-jakarta);
-  --font-script: var(--font-great-vibes);
+  --font-sans: var(--font-jakarta);
+  --font-display: var(--font-jakarta);
 }
 
 * {
@@ -35,32 +41,31 @@
 
 html {
   scroll-behavior: smooth;
-  color-scheme: dark;
 }
 
 body {
   background:
-    radial-gradient(ellipse 90% 55% at 8% -5%, rgba(255, 61, 127, 0.22), transparent 55%),
-    radial-gradient(ellipse 70% 45% at 95% 0%, rgba(232, 197, 71, 0.1), transparent 50%),
-    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(255, 61, 127, 0.08), transparent 55%),
-    var(--bg);
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(167, 139, 250, 0.35), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 95% 5%, rgba(244, 114, 182, 0.18), transparent 45%),
+    radial-gradient(ellipse 50% 30% at 50% 100%, rgba(139, 92, 246, 0.12), transparent 50%),
+    #f7f4ff;
   color: var(--ink);
-  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
   min-height: 100%;
 }
 
 ::selection {
-  background: rgba(255, 61, 127, 0.4);
-  color: #fff;
+  background: rgba(124, 58, 237, 0.25);
+  color: #1a1030;
 }
 
-.font-script {
-  font-family: var(--font-great-vibes), cursive;
+.font-display {
+  font-family: var(--font-jakarta), system-ui, sans-serif;
 }
 
 .site-wrap {
   width: 100%;
-  max-width: 1440px;
+  max-width: 1200px;
   margin-inline: auto;
   padding-inline: 1.25rem;
 }
@@ -77,90 +82,95 @@ body {
   }
 }
 
-.pink-gradient {
-  background: linear-gradient(135deg, #ff1f6b 0%, #ff3d7f 45%, #ff6b9d 100%);
+.pink-gradient,
+.purple-gradient {
+  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 40%, #a855f7 100%);
 }
 
-.gold-gradient {
-  background: linear-gradient(135deg, #f0d46a 0%, #e8c547 50%, #c9a227 100%);
+.grad-text {
+  background: linear-gradient(120deg, #7c3aed 0%, #db2777 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-.pink-text {
-  background: linear-gradient(135deg, #ff6b9d 0%, #ff3d7f 50%, #ff1f6b 100%);
+.pink-text,
+.purple-text {
+  background: linear-gradient(120deg, #7c3aed 0%, #db2777 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .soft-card {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: var(--shadow);
-  border-radius: 28px;
-  backdrop-filter: blur(12px);
+  background: #fff;
+  border: 1px solid rgba(124, 58, 237, 0.08);
+  box-shadow: 0 12px 40px rgba(88, 28, 135, 0.08);
+  border-radius: 24px;
 }
 
 .glass {
-  background: rgba(22, 22, 31, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(18px);
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(124, 58, 237, 0.1);
+  backdrop-filter: blur(16px);
 }
 
-.premium-glow {
-  background:
-    radial-gradient(circle at 85% 20%, rgba(232, 197, 71, 0.25), transparent 40%),
-    linear-gradient(120deg, #1a0a14 0%, #2a1020 40%, #1c0f18 100%);
-  border: 1px solid rgba(255, 61, 127, 0.35);
-}
-
-.icon-tile {
+.icon-3d {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 18px;
-  background: linear-gradient(145deg, rgba(255, 61, 127, 0.2), rgba(255, 61, 127, 0.05));
-  border: 1px solid rgba(255, 61, 127, 0.25);
-  color: #ff6b9d;
+  border-radius: 22px;
+  background: linear-gradient(160deg, #ffffff 0%, #f3e8ff 100%);
+  box-shadow:
+    0 14px 30px rgba(124, 58, 237, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
-@keyframes float-a {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-6deg);
-  }
-  50% {
-    transform: translateY(-12px) rotate(-6deg);
-  }
+.float-a {
+  animation: float-y 4.5s ease-in-out infinite;
+}
+.float-b {
+  animation: float-y 5s ease-in-out infinite 0.4s;
+}
+.float-c {
+  animation: float-y 5.5s ease-in-out infinite 0.8s;
 }
 
-@keyframes float-b {
+@keyframes float-y {
   0%,
   100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-14px);
+    transform: translateY(-12px);
   }
 }
 
-@keyframes float-c {
-  0%,
-  100% {
-    transform: translateY(0) rotate(7deg);
-  }
-  50% {
-    transform: translateY(-10px) rotate(7deg);
-  }
+.phone-frame {
+  background: linear-gradient(160deg, #1e1b2e, #0f0c1a);
+  border-radius: 36px;
+  padding: 10px;
+  box-shadow:
+    0 40px 80px rgba(88, 28, 135, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-.float-a {
-  animation: float-a 5s ease-in-out infinite;
+.phone-notch {
+  width: 96px;
+  height: 22px;
+  background: #0a0812;
+  border-radius: 0 0 14px 14px;
+  margin: 0 auto 8px;
 }
 
-.float-b {
-  animation: float-b 4.5s ease-in-out infinite 0.4s;
+.map-glow {
+  background:
+    radial-gradient(circle at 30% 40%, rgba(167, 139, 250, 0.45), transparent 35%),
+    radial-gradient(circle at 70% 55%, rgba(236, 72, 153, 0.25), transparent 30%),
+    linear-gradient(160deg, #1e1145 0%, #2d1b69 50%, #1a0f3d 100%);
 }
 
-.float-c {
-  animation: float-c 5.5s ease-in-out infinite 0.2s;
+.cta-banner {
+  background: linear-gradient(120deg, #6d28d9 0%, #7c3aed 45%, #db2777 100%);
 }

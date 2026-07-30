@@ -69,7 +69,18 @@ async function fetchUserProfiles(): Promise<UserProfile[]> {
       orderBy: { createdAt: "desc" }
     });
 
-    return dbProfiles.map((p) => ({
+    return dbProfiles.map((p: {
+      id: string;
+      userId: string;
+      firstName: string | null;
+      age: number | null;
+      city: string | null;
+      avatarUrl: string | null;
+      isVerified: boolean;
+      isPremium: boolean;
+      isOnline: boolean;
+      user: { id: string; email: string; name: string };
+    }): UserProfile => ({
       id: p.id,
       userId: p.userId,
       name: p.firstName || p.user.name || "Anonymous",

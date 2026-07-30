@@ -52,7 +52,7 @@ export async function GET(
     const gate = evaluateChatGate({
       userId,
       matchedAt: match.matchedAt,
-      messages: match.messages.map((m) => ({
+      messages: match.messages.map((m: { senderId: string; createdAt: Date }) => ({
         senderId: m.senderId,
         createdAt: m.createdAt,
       })),
@@ -67,7 +67,12 @@ export async function GET(
       });
     }
 
-    const formatted = match.messages.map((m) => ({
+    const formatted = match.messages.map((m: {
+      id: string;
+      content: string;
+      createdAt: Date;
+      senderId: string;
+    }) => ({
       id: m.id,
       text: m.content,
       sentAt: m.createdAt.toISOString(),

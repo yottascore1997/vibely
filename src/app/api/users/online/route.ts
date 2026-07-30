@@ -12,7 +12,12 @@ export async function GET() {
     });
 
     return success(
-      users.map((u) => ({
+      users.map((u: {
+        userId: string;
+        avatarUrl: string | null;
+        isOnline: boolean;
+        user: { id: string; name: string };
+      }) => ({
         id: u.userId,
         name: u.user.name,
         avatarUrl: u.avatarUrl,

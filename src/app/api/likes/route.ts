@@ -38,11 +38,29 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-    const swipedSet = new Set(mySwipes.map((s) => s.receiverId));
+    type IncomingLike = {
+      senderId: string;
+      action: string;
+      createdAt: Date;
+      sender: {
+        name: string;
+        profile: {
+          age: number | null;
+          bio: string | null;
+          city: string | null;
+          isVerified: boolean;
+          isOnline: boolean;
+          avatarUrl: string | null;
+          photos: { url: string }[];
+        } | null;
+      };
+    };
+
+    const swipedSet = new Set(mySwipes.map((s: { receiverId: string }) => s.receiverId));
 
     const list = incoming
-      .filter((s) => !swipedSet.has(s.senderId) && s.sender.profile)
-      .map((s) => {
+      .filter((s: IncomingLike) => !swipedSet.has(s.senderId) && s.sender.profile)
+      .map((s: IncomingLike) => {
         const p = s.sender.profile!;
         return {
           id: s.senderId,
