@@ -115,6 +115,10 @@ export async function GET(request: NextRequest) {
     }
 
     const myCity = city || myProfile?.city;
+    const myLat = myProfile?.latitude;
+    const myLng = myProfile?.longitude;
+    const hasMyGps =
+      myLat != null && myLng != null && Number.isFinite(myLat) && Number.isFinite(myLng);
     const maxDistance = maxKmParam
       ? Number(maxKmParam)
       : nearbyMode
@@ -177,16 +181,36 @@ export async function GET(request: NextRequest) {
       OR: [{ age: null }, { age: { gte: minAge, lte: maxAge } }],
     };
 
+    // Rough degree box (~111km per deg lat) to cut DB scan before exact haversine
+    const geoFilters: object[] = hasMyGps && maxDistance > 0
+      ? (() => {
+          const latDelta = maxDistance / 111;
+          const cosLat = Math.cos((myLat! * Math.PI) / 180);
+          const lngDelta = maxDistance / (111 * (Math.abs(cosLat) < 0.01 ? 0.01 : Math.abs(cosLat)));
+          return [
+            { latitude: { gte: myLat! - latDelta, lte: myLat! + latDelta } },
+            { longitude: { gte: myLng! - lngDelta, lte: myLng! + lngDelta } },
+          ];
+        })()
+      : [{ latitude: { not: null } }, { longitude: { not: null } }];
+
+    const andClause: object[] = [
+      ...geoFilters,
+      ageClause,
+      ...(lookingForClause && !nearbyMode ? [lookingForClause] : []),
+    ];
+
     const baseWhere = {
       userId: { notIn: excludeIds },
-      ...(myCity && !nearbyMode ? { city: myCity } : {}),
+      // Only fall back to same-city when we don't have GPS yet
+      ...(!hasMyGps && myCity && !nearbyMode ? { city: myCity } : {}),
       ...(!nearbyMode ? genderFilter : {}),
-      AND: lookingForClause && !nearbyMode ? [lookingForClause, ageClause] : [ageClause],
+      AND: andClause,
     };
 
     const profiles = await prisma.profile.findMany({
       where: baseWhere,
-      take: Math.max(limit * 3, 60),
+      take: Math.max(limit * 5, 80),
       include: {
         user: { select: { id: true, name: true, socialStatus: true } },
         photos: { orderBy: { order: "asc" } },
@@ -197,29 +221,30 @@ export async function GET(request: NextRequest) {
     type ProfileRow = Parameters<typeof formatProfile>[0];
 
     let formatted = profiles
-      .map((p: ProfileRow) =>
-        formatProfile(p, myCity, myProfile?.latitude, myProfile?.longitude, mode)
-      )
+      .map((p: ProfileRow) => formatProfile(p, myCity, myLat, myLng, mode))
       .filter((p: { distance: number }) => p.distance <= maxDistance)
       .sort((a: { distance: number }, b: { distance: number }) => a.distance - b.distance)
       .slice(0, limit);
 
-    if (formatted.length === 0 && myCity) {
+    // Soft widen: if GPS box is empty, still try anyone with coords (exact haversine)
+    if (formatted.length === 0 && hasMyGps) {
       const nearby = await prisma.profile.findMany({
         where: {
           userId: { notIn: excludeIds },
+          latitude: { not: null },
+          longitude: { not: null },
           ...(!nearbyMode ? genderFilter : {}),
           AND: [ageClause],
         },
-        take: Math.max(limit * 2, 40),
+        take: Math.max(limit * 4, 60),
         include: {
-          user: { select: { id: true, name: true } },
+          user: { select: { id: true, name: true, socialStatus: true } },
           photos: { orderBy: { order: "asc" } },
           interests: { include: { interest: true } },
         },
       });
       formatted = nearby
-        .map((p: ProfileRow) => formatProfile(p, myCity, myProfile?.latitude, myProfile?.longitude, mode))
+        .map((p: ProfileRow) => formatProfile(p, myCity, myLat, myLng, mode))
         .filter((p: { distance: number }) => p.distance <= maxDistance)
         .sort((a: { distance: number }, b: { distance: number }) => a.distance - b.distance)
         .slice(0, limit);

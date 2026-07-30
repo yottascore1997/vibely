@@ -2,6 +2,18 @@ import { NextRequest } from "next/server";
 import { success, error } from "@/lib/api-response";
 import { getAuthUser, unauthorized } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { syncHangoutLifecycle } from "@/lib/hangout-lifecycle";
+
+type ParticipantRow = {
+  userId: string;
+  status?: string;
+  rejectRemark?: string | null;
+  user: {
+    id: string;
+    name: string;
+    profile: { avatarUrl: string | null } | null;
+  };
+};
 
 function formatPlan(h: {
   id: string;
@@ -19,8 +31,10 @@ function formatPlan(h: {
   kind: string;
   imageUrl: string | null;
   creatorId: string;
+  visibility?: string;
+  isPrivate?: boolean;
   activity: { name: string } | null;
-  participants: { userId: string; user: { id: string; name: string; profile: { avatarUrl: string | null } | null } }[];
+  participants: ParticipantRow[];
   creator: { id: string; name: string; profile: { avatarUrl: string | null } | null };
 }) {
   const scheduled = new Date(h.scheduledAt);
@@ -29,9 +43,17 @@ function formatPlan(h: {
   const diffMin = Math.round(diffMs / 60000);
 
   let badge = "Today";
-  if (diffMin < 0) badge = "Live";
+  if (h.status === "COMPLETED") badge = "Done";
+  else if (h.status === "CANCELLED") badge = "Cancelled";
+  else if (h.status === "FULL") badge = "Full";
+  else if (diffMin < 0) badge = "Live";
   else if (diffMin <= 60) badge = "Soon";
   else if (diffMin > 24 * 60) badge = "This Week";
+
+  const accepted = h.participants.filter(
+    (p) => !p.status || p.status === "ACCEPTED"
+  );
+  const pending = h.participants.filter((p) => p.status === "PENDING");
 
   return {
     id: h.id,
@@ -45,27 +67,55 @@ function formatPlan(h: {
     scheduledAt: h.scheduledAt,
     endDate: h.endDate,
     time: scheduled.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }),
-    timeLabel: diffMin <= 0 ? "Now" : diffMin < 60 ? `in ${diffMin} min` : scheduled.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }),
+    timeLabel:
+      h.status === "COMPLETED"
+        ? "Ended"
+        : h.status === "CANCELLED"
+          ? "Cancelled"
+          : diffMin <= 0
+            ? "Now"
+            : diffMin < 60
+              ? `in ${diffMin} min`
+              : scheduled.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }),
     maxParticipants: h.maxParticipants,
-    going: h.participants.length,
+    going: accepted.length,
     status: h.status,
     kind: h.kind,
-    visibility: (h as any).visibility || ((h as any).isPrivate ? "FRIENDS" : "PUBLIC"),
-    isPrivate: (h as any).isPrivate ?? ((h as any).visibility === "FRIENDS"),
+    visibility: h.visibility || (h.isPrivate ? "FRIENDS" : "PUBLIC"),
+    isPrivate: h.isPrivate ?? h.visibility === "FRIENDS",
     imageUrl: h.imageUrl,
     activity: h.activity?.name,
     badge,
     creatorId: h.creatorId,
     creatorName: h.creator.name,
     creatorAvatar: h.creator.profile?.avatarUrl,
-    participants: h.participants.map((p: {
-      userId: string;
-      user: { name: string; profile: { avatarUrl: string | null } | null };
-    }) => ({
+    participants: accepted.map((p) => ({
       id: p.userId,
       name: p.user.name,
       avatarUrl: p.user.profile?.avatarUrl,
+      status: "ACCEPTED",
     })),
+    requests: pending.map((p) => ({
+      id: p.userId,
+      name: p.user.name,
+      avatarUrl: p.user.profile?.avatarUrl,
+      status: "PENDING",
+    })),
+    myParticipationStatus: undefined as string | undefined,
+  };
+}
+
+function withMyStatus(
+  plan: ReturnType<typeof formatPlan>,
+  hangout: { participants: ParticipantRow[] },
+  userId: string | null
+) {
+  if (!userId) return plan;
+  const mine = hangout.participants.find((p) => p.userId === userId);
+  return {
+    ...plan,
+    myParticipationStatus: mine?.status || null,
+    rejectRemark: mine?.rejectRemark || null,
   };
 }
 
@@ -74,13 +124,15 @@ export async function GET(request: NextRequest) {
   const filter = searchParams.get("filter") || "all";
   const mine = searchParams.get("mine") === "true";
   const city = searchParams.get("city");
-  const kind = searchParams.get("kind"); // HANGOUT | EVENT | TRAVEL
+  const kind = searchParams.get("kind");
   const auth = getAuthUser(request);
   const userId = auth?.userId ?? null;
 
   if (mine && !auth) return unauthorized();
 
   try {
+    await syncHangoutLifecycle();
+
     let whereClause: any = {};
 
     if (kind && ["HANGOUT", "EVENT", "TRAVEL"].includes(kind)) {
@@ -88,24 +140,26 @@ export async function GET(request: NextRequest) {
     }
 
     if (mine && userId) {
-      whereClause.OR = [{ creatorId: userId }, { participants: { some: { userId } } }];
+      whereClause.OR = [
+        { creatorId: userId },
+        { participants: { some: { userId } } },
+      ];
     } else {
+      // Public feed: hide ended / cancelled
+      whereClause.status = { in: ["OPEN", "FULL"] };
+
       let targetCity = city;
       if (!targetCity && userId) {
         const userProfile = await prisma.profile.findUnique({
-          where: { userId: userId },
-          select: { city: true }
+          where: { userId },
+          select: { city: true },
         });
-        if (userProfile?.city) {
-          targetCity = userProfile.city;
-        }
+        if (userProfile?.city) targetCity = userProfile.city;
       }
 
       if (targetCity && kind !== "TRAVEL") {
         whereClause.creator = {
-          profile: {
-            city: targetCity
-          }
+          profile: { city: targetCity },
         };
       }
     }
@@ -131,20 +185,24 @@ export async function GET(request: NextRequest) {
       orderBy: { scheduledAt: "asc" },
     });
 
-    let list: ReturnType<typeof formatPlan>[] = hangouts.map(
-      (h: Parameters<typeof formatPlan>[0]) => formatPlan(h)
+    let list = hangouts.map((h: Parameters<typeof formatPlan>[0]) =>
+      withMyStatus(formatPlan(h), h, userId)
     );
 
-    // Apply Friends-Only vs Public Privacy & Visibility Filter
-    const visParam = (searchParams.get("visibility") || searchParams.get("audience") || "").toLowerCase();
+    const visParam = (
+      searchParams.get("visibility") ||
+      searchParams.get("audience") ||
+      ""
+    ).toLowerCase();
+
     list = list.filter((p) => {
       const isCreator = p.creatorId === userId;
-      const isParticipant = p.participants.some((pt) => pt.id === userId);
+      const isAccepted = p.participants.some((pt) => pt.id === userId);
+      const isPending = p.requests?.some((r) => r.id === userId);
       const isMatchedFriend = matchedUserIds.includes(p.creatorId);
 
       if (p.isPrivate || p.visibility === "FRIENDS") {
-        // Friends-only plan: Only creator, participants, or matched friends can see
-        if (!isCreator && !isParticipant && !isMatchedFriend) {
+        if (!isCreator && !isAccepted && !isPending && !isMatchedFriend) {
           return false;
         }
       }
@@ -163,7 +221,9 @@ export async function GET(request: NextRequest) {
       list = list.filter((p) => p.creatorId !== userId);
     }
     if (filter === "today") {
-      list = list.filter((p) => p.badge === "Today" || p.badge === "Soon" || p.badge === "Live");
+      list = list.filter(
+        (p) => p.badge === "Today" || p.badge === "Soon" || p.badge === "Live"
+      );
     }
     return success(list);
   } catch (err) {
@@ -203,7 +263,8 @@ export async function POST(request: NextRequest) {
 
     const hangoutKind =
       kind && ["HANGOUT", "EVENT", "TRAVEL"].includes(kind) ? kind : "HANGOUT";
-    const isPrivateBool = isPrivate === true || visibility === "FRIENDS" || visibility === "FRIENDS_ONLY";
+    const isPrivateBool =
+      isPrivate === true || visibility === "FRIENDS" || visibility === "FRIENDS_ONLY";
     const visibilityStr = isPrivateBool ? "FRIENDS" : "PUBLIC";
 
     let activityId: string | undefined;
@@ -234,7 +295,10 @@ export async function POST(request: NextRequest) {
         kind: hangoutKind,
         visibility: visibilityStr,
         isPrivate: isPrivateBool,
-        participants: { create: { userId: creatorId } },
+        status: "OPEN",
+        participants: {
+          create: { userId: creatorId, status: "ACCEPTED" },
+        },
       },
       include: {
         activity: true,
@@ -243,7 +307,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return success(formatPlan(hangout), 201);
+    return success(withMyStatus(formatPlan(hangout), hangout, creatorId), 201);
   } catch (e) {
     console.error("Create hangout error:", e);
     return error("Could not create plan", 500);

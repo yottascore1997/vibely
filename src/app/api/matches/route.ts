@@ -13,6 +13,8 @@ function formatMatch(
       age: number | null;
       bio: string | null;
       city: string | null;
+      latitude: number | null;
+      longitude: number | null;
       avatarUrl: string | null;
       isVerified: boolean;
       isOnline: boolean;
@@ -26,7 +28,11 @@ function formatMatch(
       timeLabel: string | null;
     } | null;
   },
-  myCity?: string | null,
+  me?: {
+    city?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+  } | null,
   matchedAt?: Date
 ) {
   const p = other.profile;
@@ -36,7 +42,14 @@ function formatMatch(
     age: p?.age,
     bio: p?.bio,
     city: p?.city,
-    distance: estimateDistanceKm(myCity, p?.city),
+    distance: estimateDistanceKm(
+      me?.city,
+      p?.city,
+      me?.latitude,
+      me?.longitude,
+      p?.latitude,
+      p?.longitude
+    ),
     isVerified: p?.isVerified,
     isOnline: p?.isOnline,
     avatarUrl: p?.avatarUrl || p?.photos[0]?.url,
@@ -67,7 +80,10 @@ export async function GET(request: NextRequest) {
     // Drop matches that never got a reply within 24h
     await expireStaleMatches(userId);
 
-    const me = await prisma.profile.findUnique({ where: { userId }, select: { city: true } });
+    const me = await prisma.profile.findUnique({
+      where: { userId },
+      select: { city: true, latitude: true, longitude: true },
+    });
 
     const matches = await prisma.match.findMany({
       where: { OR: [{ user1Id: userId }, { user2Id: userId }] },
@@ -102,7 +118,7 @@ export async function GET(request: NextRequest) {
         const otherId = m.user1Id === userId ? m.user2Id : m.user1Id;
         const other = byId.get(otherId);
         if (!other?.profile) return null;
-        return formatMatch(other, me?.city, m.matchedAt);
+        return formatMatch(other, me, m.matchedAt);
       })
       .filter(Boolean);
 

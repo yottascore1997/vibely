@@ -10,7 +10,10 @@ export async function GET(request: NextRequest) {
   const userId = auth.userId;
 
   try {
-    const me = await prisma.profile.findUnique({ where: { userId }, select: { city: true } });
+    const me = await prisma.profile.findUnique({
+      where: { userId },
+      select: { city: true, latitude: true, longitude: true },
+    });
 
     const [incoming, mySwipes] = await Promise.all([
       prisma.swipe.findMany({
@@ -48,6 +51,8 @@ export async function GET(request: NextRequest) {
           age: number | null;
           bio: string | null;
           city: string | null;
+          latitude: number | null;
+          longitude: number | null;
           isVerified: boolean;
           isOnline: boolean;
           avatarUrl: string | null;
@@ -68,7 +73,14 @@ export async function GET(request: NextRequest) {
           age: p.age,
           bio: p.bio,
           city: p.city,
-          distance: estimateDistanceKm(me?.city, p.city),
+          distance: estimateDistanceKm(
+            me?.city,
+            p.city,
+            me?.latitude,
+            me?.longitude,
+            p.latitude,
+            p.longitude
+          ),
           isVerified: p.isVerified,
           isOnline: p.isOnline,
           avatarUrl: p.avatarUrl || p.photos[0]?.url,

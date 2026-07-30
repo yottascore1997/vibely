@@ -52,6 +52,12 @@ enum HangoutKind {
   TRAVEL
 }
 
+enum ParticipantStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 model User {
   id            String        @id @default(cuid())
   email         String        @unique
@@ -241,14 +247,17 @@ model Hangout {
 }
 
 model Participant {
-  id        String   @id @default(cuid())
-  hangoutId String
-  userId    String
-  hangout   Hangout  @relation(fields: [hangoutId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  joinedAt  DateTime @default(now())
+  id           String            @id @default(cuid())
+  hangoutId    String
+  userId       String
+  status       ParticipantStatus @default(ACCEPTED)
+  rejectRemark String?
+  hangout      Hangout           @relation(fields: [hangoutId], references: [id], onDelete: Cascade)
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt     DateTime          @default(now())
 
   @@unique([hangoutId, userId])
+  @@index([hangoutId, status])
 }
 
 model SocialStatus {

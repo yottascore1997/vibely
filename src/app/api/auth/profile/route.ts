@@ -60,7 +60,15 @@ export async function POST(request: NextRequest) {
       lookingFor: body.lookingFor ? JSON.stringify(body.lookingFor) : undefined,
       avatarUrl: body.avatarUrl || undefined,
       city: body.city || undefined,
-      onboardingDone: true,
+      latitude:
+        body.latitude != null && Number.isFinite(Number(body.latitude))
+          ? Number(body.latitude)
+          : undefined,
+      longitude:
+        body.longitude != null && Number.isFinite(Number(body.longitude))
+          ? Number(body.longitude)
+          : undefined,
+      onboardingDone: body.onboardingDone === false ? false : true,
     };
 
     if (body.firstName) {

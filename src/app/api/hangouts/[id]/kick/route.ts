@@ -2,9 +2,13 @@ import { NextRequest } from "next/server";
 import { success, error } from "@/lib/api-response";
 import { getAuthUser, unauthorized } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { refreshSeatStatus } from "@/lib/hangout-lifecycle";
 
-/** Host removes a participant */
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+/** Host removes an accepted participant. */
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const auth = getAuthUser(request);
   if (!auth) return unauthorized();
   const hostId = auth.userId;
@@ -23,14 +27,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (hangout.creatorId !== hostId) return error("Only the host can remove people", 403);
     if (targetUserId === hostId) return error("Host cannot remove themselves", 400);
 
-    const membership = hangout.participants.find((p: { id: string; userId: string }) => p.userId === targetUserId);
+    const membership = hangout.participants.find(
+      (p: { id: string; userId: string }) => p.userId === targetUserId
+    );
     if (!membership) return error("User is not in this plan", 400);
 
     await prisma.participant.delete({ where: { id: membership.id } });
+    await refreshSeatStatus(id);
+
+    const going = hangout.participants.filter(
+      (p: { userId: string; status: string }) =>
+        p.userId !== targetUserId && p.status === "ACCEPTED"
+    ).length;
 
     return success({
       message: "Participant removed",
-      going: hangout.participants.length - 1,
+      going,
       remark: body.remark || null,
     });
   } catch (e) {
