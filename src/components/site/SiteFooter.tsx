@@ -68,6 +68,7 @@ export default function SiteFooter() {
                 { href: "/auth", label: "Help Center" },
                 { href: "/privacy", label: "Privacy Policy" },
                 { href: "/terms", label: "Terms & Conditions" },
+                { href: "/child-safety", label: "Child Safety" },
                 { href: "/delete-account", label: "Delete Account" },
               ],
             },
@@ -115,6 +116,9 @@ export default function SiteFooter() {
             </Link>
             <Link href="/terms" className="hover:text-vibe-purple">
               Terms & Conditions
+            </Link>
+            <Link href="/child-safety" className="hover:text-vibe-purple">
+              Child Safety
             </Link>
             <Link href="/delete-account" className="hover:text-vibe-purple">
               Delete Account

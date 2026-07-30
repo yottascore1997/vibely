@@ -84,10 +84,15 @@ export default function PrivacyPolicyPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="7. Children">
+      <LegalSection title="7. Children & Child Safety Policy">
         <p>
-          Hangora is for users aged 18 and above. We do not knowingly collect data from anyone under 18. If you
-          believe a minor has created an account, contact us and we will remove it.
+          Hangora is exclusively for users aged 18 and above. We maintain a zero-tolerance policy for Child Sexual Abuse
+          and Exploitation (CSAE) and Child Sexual Abuse Material (CSAM). For full details on our moderation, enforcement,
+          and NCMEC reporting standards, please review our dedicated{" "}
+          <Link href="/child-safety" className="font-semibold text-vibe-pink hover:underline">
+            Child Safety &amp; CSAE Policy
+          </Link>
+          .
         </p>
       </LegalSection>
 
