@@ -39,6 +39,16 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     console.error("Login error:", err);
-    return error("Database error. MySQL check karo.", 500);
+    const msg = err instanceof Error ? err.message : String(err);
+    const isDb =
+      /P1001|P1000|P1017|Can't reach|ECONNREFUSED|ETIMEDOUT|prisma|mysql|database/i.test(
+        msg
+      );
+    return error(
+      isDb
+        ? "Database error. MySQL check karo — DATABASE_URL / MySQL service down."
+        : "Login failed. Please try again.",
+      500
+    );
   }
 }
