@@ -26,7 +26,7 @@ export default function SiteHeader() {
           <span className="pink-gradient flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-[var(--shadow-pink)]">
             <Heart className="h-4 w-4 fill-white" strokeWidth={0} />
           </span>
-          <span className="text-[22px] font-extrabold tracking-tight text-white">Vibely</span>
+          <span className="text-[22px] font-extrabold tracking-tight text-white">Hangora</span>
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">

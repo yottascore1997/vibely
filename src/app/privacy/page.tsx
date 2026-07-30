@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import LegalPage, { LegalSection } from "@/components/site/LegalPage";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How Vibely collects, uses, and protects your personal information.",
+  description: "How Hangora collects, uses, and protects your personal information.",
 };
 
 export default function PrivacyPolicyPage() {
@@ -11,7 +12,7 @@ export default function PrivacyPolicyPage() {
     <LegalPage title="Privacy Policy" updated="July 21, 2026">
       <LegalSection title="1. Who we are">
         <p>
-          Vibely (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is a social dating and hangout platform that helps people
+          Hangora (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is a social dating and hangout platform that helps people
           discover connections, join local events, and chat safely. This Privacy Policy explains what
           information we collect and how we use it when you use our website, mobile apps, and related services
           (the &quot;Services&quot;).
@@ -64,10 +65,14 @@ export default function PrivacyPolicyPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="5. Your choices">
+      <LegalSection title="5. Your choices & Account Deletion">
         <p>
-          You can update profile details in the app, control location permissions on your device, and request
-          account deletion by contacting us. You may also opt out of non-essential marketing emails.
+          You can update profile details in the app, control location permissions on your device, and request or execute
+          account deletion at any time on our dedicated{" "}
+          <Link href="/delete-account" className="font-semibold text-vibe-pink hover:underline">
+            Account &amp; Data Deletion Page
+          </Link>
+          . You may also opt out of non-essential marketing emails.
         </p>
       </LegalSection>
 
@@ -81,7 +86,7 @@ export default function PrivacyPolicyPage() {
 
       <LegalSection title="7. Children">
         <p>
-          Vibely is for users aged 18 and above. We do not knowingly collect data from anyone under 18. If you
+          Hangora is for users aged 18 and above. We do not knowingly collect data from anyone under 18. If you
           believe a minor has created an account, contact us and we will remove it.
         </p>
       </LegalSection>
@@ -97,8 +102,8 @@ export default function PrivacyPolicyPage() {
       <LegalSection title="9. Contact">
         <p>
           For privacy questions or requests, email us at{" "}
-          <a href="mailto:privacy@vibely.app" className="font-semibold text-vibe-pink hover:underline">
-            privacy@vibely.app
+          <a href="mailto:privacy@hangora.app" className="font-semibold text-vibe-pink hover:underline">
+            privacy@hangora.app
           </a>
           .
         </p>

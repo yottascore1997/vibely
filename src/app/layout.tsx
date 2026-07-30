@@ -16,11 +16,11 @@ const greatVibes = Great_Vibes({
 
 export const metadata: Metadata = {
   title: {
-    default: "Vibely — Find your vibe. Create real connections.",
-    template: "%s · Vibely",
+    default: "Hangora — Find your vibe. Create real connections.",
+    template: "%s · Hangora",
   },
   description:
-    "Meet new people, join local events, and create real connections with Vibely.",
+    "Meet new people, join local events, and create real connections with Hangora.",
 };
 
 export default function RootLayout({

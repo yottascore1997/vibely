@@ -10,7 +10,7 @@ export default function AuthPage() {
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-vibe-purple">Get started</p>
           <h1 className="font-display mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">
-            Join Vibely
+            Join Hangora
           </h1>
           <p className="mt-4 max-w-md text-vibe-muted">
             Create your profile, set your vibe, and start discovering hangouts. Full auth connects to the same API as the mobile app.
@@ -44,7 +44,7 @@ export default function AuthPage() {
               href="/discover"
               className="vibe-gradient flex w-full items-center justify-center rounded-2xl py-3.5 text-sm font-bold text-white"
             >
-              Continue to Vibely
+              Continue to Hangora
             </Link>
           </form>
           <p className="mt-4 text-center text-xs text-vibe-faint">

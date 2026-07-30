@@ -50,7 +50,7 @@ export default function SiteFooter() {
           <div className="grid grid-cols-3 gap-6">
             {[
               {
-                title: "Vibely",
+                title: "Hangora",
                 links: [
                   { href: "/discover", label: "About" },
                   { href: "/auth", label: "Careers" },
@@ -63,6 +63,7 @@ export default function SiteFooter() {
                   { href: "/auth", label: "Help Center" },
                   { href: "/privacy", label: "Privacy Policy" },
                   { href: "/terms", label: "Terms & Conditions" },
+                  { href: "/delete-account", label: "Delete Account" },
                 ],
               },
               {
@@ -126,7 +127,7 @@ export default function SiteFooter() {
 
       <div className="border-t border-white/8 py-5">
         <div className="site-wrap flex flex-col items-center justify-between gap-3 text-xs text-vibe-faint sm:flex-row">
-          <p>© {new Date().getFullYear()} Vibely. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Hangora. All rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <Link href="/privacy" className="hover:text-vibe-pink">
               Privacy Policy

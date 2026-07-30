@@ -176,7 +176,7 @@ const STEPS = [
 
 const REVIEWS = [
   {
-    quote: "I joined a coffee hangout and met my now-best friend. Vibely feels real, not fake.",
+    quote: "I joined a coffee hangout and met my now-best friend. Hangora feels real, not fake.",
     name: "Priya S.",
     city: "Mumbai",
     image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80",
@@ -249,7 +249,7 @@ export default function HomePage() {
                 href="/auth"
                 className="pink-gradient inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold text-white shadow-[var(--shadow-pink)] transition hover:scale-[1.03]"
               >
-                Join Vibely Now
+                Join Hangora Now
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <a
@@ -492,7 +492,7 @@ export default function HomePage() {
                 <Crown className="h-3.5 w-3.5" /> Luxe Membership
               </span>
               <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-                Vibely <span className="font-script text-4xl font-normal text-vibe-gold sm:text-5xl">Premium</span>
+                Hangora <span className="font-script text-4xl font-normal text-vibe-gold sm:text-5xl">Premium</span>
               </h2>
               <p className="mt-3 max-w-sm text-sm leading-relaxed text-vibe-muted">
                 Unlock unlimited likes, see who liked you, and get advanced filters for better matches.
@@ -536,7 +536,7 @@ export default function HomePage() {
       <section id="how" className="site-wrap py-16 sm:py-20">
         <div className="text-center">
           <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-            How <span className="font-script pink-text text-4xl font-normal sm:text-5xl">Vibely</span> Works
+            How <span className="font-script pink-text text-4xl font-normal sm:text-5xl">Hangora</span> Works
           </h2>
           <p className="mt-2 text-sm font-medium text-vibe-muted">Four simple steps to real connections</p>
         </div>
@@ -576,7 +576,7 @@ export default function HomePage() {
             <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
               What People Are Saying
             </h2>
-            <p className="mt-2 text-sm font-medium text-vibe-muted">Real stories from the Vibely community</p>
+            <p className="mt-2 text-sm font-medium text-vibe-muted">Real stories from the Hangora community</p>
           </div>
 
           <div className="mt-10 flex gap-5 overflow-x-auto pb-2 md:grid md:grid-cols-3 md:overflow-visible">

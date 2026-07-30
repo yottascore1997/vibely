@@ -3,7 +3,7 @@ import LegalPage, { LegalSection } from "@/components/site/LegalPage";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions",
-  description: "Terms of use for Vibely — dating, hangouts, and community rules.",
+  description: "Terms of use for Hangora — dating, hangouts, and community rules.",
 };
 
 export default function TermsPage() {
@@ -11,7 +11,7 @@ export default function TermsPage() {
     <LegalPage title="Terms & Conditions" updated="July 21, 2026">
       <LegalSection title="1. Agreement">
         <p>
-          By accessing or using Vibely (website, mobile apps, and related services), you agree to these Terms
+          By accessing or using Hangora (website, mobile apps, and related services), you agree to these Terms
           &amp; Conditions and our Privacy Policy. If you do not agree, do not use the Services.
         </p>
       </LegalSection>
@@ -25,7 +25,7 @@ export default function TermsPage() {
 
       <LegalSection title="3. The Services">
         <p>
-          Vibely lets you create a profile, discover people, match, chat, join hangouts and events, share
+          Hangora lets you create a profile, discover people, match, chat, join hangouts and events, share
           social status, and related features. We may change, suspend, or discontinue features at any time.
           Some features may require Premium or other paid plans.
         </p>
@@ -42,7 +42,7 @@ export default function TermsPage() {
           <li>Upload content you do not have rights to</li>
         </ul>
         <p>
-          You grant Vibely a worldwide, non-exclusive license to host and display content you upload as needed
+          You grant Hangora a worldwide, non-exclusive license to host and display content you upload as needed
           to operate the Services. You remain responsible for your content.
         </p>
       </LegalSection>
@@ -50,7 +50,7 @@ export default function TermsPage() {
       <LegalSection title="5. Safety">
         <p>
           Meeting people offline carries risk. Always meet in public places, tell a friend, and trust your
-          instincts. Vibely does not conduct criminal background checks on all users and is not responsible for
+          instincts. Hangora does not conduct criminal background checks on all users and is not responsible for
           user conduct offline.
         </p>
       </LegalSection>
@@ -73,7 +73,7 @@ export default function TermsPage() {
       <LegalSection title="8. Disclaimers">
         <p>
           The Services are provided &quot;as is&quot; without warranties of any kind. We do not guarantee
-          matches, hangouts, or uninterrupted availability. To the fullest extent allowed by law, Vibely is not
+          matches, hangouts, or uninterrupted availability. To the fullest extent allowed by law, Hangora is not
           liable for indirect, incidental, or consequential damages arising from your use of the Services.
         </p>
       </LegalSection>
@@ -88,8 +88,8 @@ export default function TermsPage() {
       <LegalSection title="10. Contact">
         <p>
           Questions about these Terms:{" "}
-          <a href="mailto:legal@vibely.app" className="font-semibold text-vibe-pink hover:underline">
-            legal@vibely.app
+          <a href="mailto:legal@hangora.app" className="font-semibold text-vibe-pink hover:underline">
+            legal@hangora.app
           </a>
           .
         </p>

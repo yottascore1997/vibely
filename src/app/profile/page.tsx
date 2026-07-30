@@ -7,7 +7,7 @@ export default function ProfilePage() {
     <SiteLayout>
       <PageHero
         kicker="Profile"
-        title="Your Vibely identity"
+        title="Your Hangora identity"
         subtitle="Edit photos, interests, and preferences — the same profile that powers Discover & Hangout."
       />
 
