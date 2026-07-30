@@ -26,11 +26,7 @@ export default function SiteHeader() {
           <span className="purple-gradient flex h-10 w-10 items-center justify-center rounded-xl text-sm font-extrabold text-white shadow-[var(--shadow-purple)]">
             H
           </span>
-<<<<<<< HEAD
-          <span className="text-[22px] font-extrabold tracking-tight text-white">Hangora</span>
-=======
           <span className="text-[22px] font-extrabold tracking-tight text-[#1a1030]">Hangora</span>
->>>>>>> d5f0b647e653ab5fcc1a6e0e71a516d1b5d5e807
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex">

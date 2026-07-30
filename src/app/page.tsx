@@ -6,6 +6,7 @@ import {
   Apple,
   Play,
   Heart,
+  ArrowRight,
   Coffee,
   Plane,
   Clapperboard,
@@ -96,11 +97,7 @@ const SAFETY = [
 
 const REVIEWS = [
   {
-<<<<<<< HEAD
     quote: "I joined a coffee hangout and met my now-best friend. Hangora feels real, not fake.",
-=======
-    quote: "Met my travel buddy for Goa in two days. Hangora just works.",
->>>>>>> d5f0b647e653ab5fcc1a6e0e71a516d1b5d5e807
     name: "Priya S.",
     city: "Mumbai",
     image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80",
@@ -167,12 +164,8 @@ export default function HomePage() {
                 href="/auth"
                 className="purple-gradient inline-flex items-center rounded-full px-7 py-3.5 text-sm font-bold text-white shadow-[var(--shadow-purple)] transition hover:scale-[1.03]"
               >
-<<<<<<< HEAD
                 Join Hangora Now
-                <ArrowRight className="h-4 w-4" />
-=======
-                Download App
->>>>>>> d5f0b647e653ab5fcc1a6e0e71a516d1b5d5e807
+                <ArrowRight className="h-4 w-4 ml-2" />
               </Link>
               <a
                 href="#features"
@@ -268,22 +261,6 @@ export default function HomePage() {
           variants={fade}
           className="text-center"
         >
-<<<<<<< HEAD
-          <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr_1fr]">
-            <div>
-              <span className="gold-gradient inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold text-black">
-                <Crown className="h-3.5 w-3.5" /> Luxe Membership
-              </span>
-              <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-                Hangora <span className="font-script text-4xl font-normal text-vibe-gold sm:text-5xl">Premium</span>
-              </h2>
-              <p className="mt-3 max-w-sm text-sm leading-relaxed text-vibe-muted">
-                Unlock unlimited likes, see who liked you, and get advanced filters for better matches.
-              </p>
-              <Link
-                href="/auth"
-                className="gold-gradient mt-6 inline-flex rounded-full px-6 py-3 text-sm font-bold text-black shadow-lg transition hover:scale-[1.03]"
-=======
           <h2 className="text-3xl font-extrabold tracking-tight text-[#1a1030] sm:text-4xl">
             People Around You <span className="grad-text">Right Now.</span>
           </h2>
@@ -324,7 +301,6 @@ export default function HomePage() {
                 key={NEARBY[i]}
                 className="absolute"
                 style={{ top: pos.top, left: pos.left }}
->>>>>>> d5f0b647e653ab5fcc1a6e0e71a516d1b5d5e807
               >
                 <span className="absolute -inset-2 animate-ping rounded-full bg-violet-400/30" />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -394,13 +370,8 @@ export default function HomePage() {
       {/* HOW IT WORKS */}
       <section id="how" className="site-wrap py-14 sm:py-20">
         <div className="text-center">
-<<<<<<< HEAD
-          <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-            How <span className="font-script pink-text text-4xl font-normal sm:text-5xl">Hangora</span> Works
-=======
           <h2 className="text-3xl font-extrabold tracking-tight text-[#1a1030] sm:text-4xl">
             How <span className="grad-text">Hangora</span> Works
->>>>>>> d5f0b647e653ab5fcc1a6e0e71a516d1b5d5e807
           </h2>
         </div>
 
@@ -451,9 +422,6 @@ export default function HomePage() {
             <h2 className="text-3xl font-extrabold tracking-tight text-[#1a1030] sm:text-4xl">
               We&apos;ve Got Your <span className="grad-text">Back.</span>
             </h2>
-<<<<<<< HEAD
-            <p className="mt-2 text-sm font-medium text-vibe-muted">Real stories from the Hangora community</p>
-=======
             <ul className="mt-8 space-y-4">
               {SAFETY.map((item, i) => {
                 const Icon = item.icon;
@@ -478,7 +446,6 @@ export default function HomePage() {
                 );
               })}
             </ul>
->>>>>>> d5f0b647e653ab5fcc1a6e0e71a516d1b5d5e807
           </div>
 
           <motion.div

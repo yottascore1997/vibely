@@ -37,71 +37,7 @@ export default function SiteFooter() {
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#6b6280]">
               Meet real people. Create real moments.
             </p>
-<<<<<<< HEAD
-            <form className="mt-5 flex gap-2" onSubmit={(e) => e.preventDefault()}>
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="min-w-0 flex-1 rounded-full border border-white/12 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-vibe-faint focus:border-vibe-pink"
-              />
-              <button
-                type="submit"
-                className="pink-gradient shrink-0 rounded-full px-5 py-3 text-sm font-bold text-white shadow-[var(--shadow-pink)]"
-              >
-                Subscribe
-              </button>
-            </form>
-          </div>
-
-          <div className="grid grid-cols-3 gap-6">
-            {[
-              {
-                title: "Hangora",
-                links: [
-                  { href: "/discover", label: "About" },
-                  { href: "/auth", label: "Careers" },
-                  { href: "/matches", label: "Press" },
-                ],
-              },
-              {
-                title: "Support",
-                links: [
-                  { href: "/auth", label: "Help Center" },
-                  { href: "/privacy", label: "Privacy Policy" },
-                  { href: "/terms", label: "Terms & Conditions" },
-                  { href: "/delete-account", label: "Delete Account" },
-                ],
-              },
-              {
-                title: "Explore",
-                links: [
-                  { href: "/events", label: "Events" },
-                  { href: "/hangout", label: "Hangouts" },
-                  { href: "/travel", label: "Travel" },
-                ],
-              },
-            ].map((col) => (
-              <div key={col.title}>
-                <p className="text-sm font-extrabold text-white">{col.title}</p>
-                <ul className="mt-3 space-y-2 text-sm text-vibe-muted">
-                  {col.links.map((l) => (
-                    <li key={l.label}>
-                      <Link href={l.href} className="hover:text-vibe-pink">
-                        {l.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div>
-            <p className="text-sm font-extrabold text-white">Follow us</p>
-            <div className="mt-3 flex gap-2">
-=======
             <div className="mt-4 flex gap-2">
->>>>>>> d5f0b647e653ab5fcc1a6e0e71a516d1b5d5e807
               {socials.map((s) => (
                 <a
                   key={s.label}
@@ -130,8 +66,9 @@ export default function SiteFooter() {
               title: "Support",
               links: [
                 { href: "/auth", label: "Help Center" },
-                { href: "/privacy", label: "Privacy" },
-                { href: "/terms", label: "Terms" },
+                { href: "/privacy", label: "Privacy Policy" },
+                { href: "/terms", label: "Terms & Conditions" },
+                { href: "/delete-account", label: "Delete Account" },
               ],
             },
           ].map((col) => (
@@ -169,23 +106,18 @@ export default function SiteFooter() {
         </div>
       </div>
 
-<<<<<<< HEAD
-      <div className="border-t border-white/8 py-5">
-        <div className="site-wrap flex flex-col items-center justify-between gap-3 text-xs text-vibe-faint sm:flex-row">
-          <p>© {new Date().getFullYear()} Hangora. All rights reserved.</p>
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-            <Link href="/privacy" className="hover:text-vibe-pink">
-=======
       <div className="border-t border-violet-100 py-5">
         <div className="site-wrap flex flex-col items-center justify-between gap-2 text-xs text-[#9b93ad] sm:flex-row">
           <p>© {new Date().getFullYear()} Hangora. All rights reserved.</p>
           <div className="flex gap-4">
             <Link href="/privacy" className="hover:text-vibe-purple">
->>>>>>> d5f0b647e653ab5fcc1a6e0e71a516d1b5d5e807
               Privacy Policy
             </Link>
             <Link href="/terms" className="hover:text-vibe-purple">
               Terms & Conditions
+            </Link>
+            <Link href="/delete-account" className="hover:text-vibe-purple">
+              Delete Account
             </Link>
           </div>
         </div>
