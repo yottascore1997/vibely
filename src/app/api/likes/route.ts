@@ -85,8 +85,14 @@ export async function GET(request: NextRequest) {
           isOnline: p.isOnline,
           avatarUrl: p.avatarUrl || p.photos[0]?.url,
           action: s.action,
+          isSuperLike: s.action === "SUPER_LIKE",
           likedAt: s.createdAt.toISOString(),
         };
+      })
+      // Super likes float to the top
+      .sort((a: { isSuperLike?: boolean; likedAt: string }, b: { isSuperLike?: boolean; likedAt: string }) => {
+        if (!!a.isSuperLike !== !!b.isSuperLike) return a.isSuperLike ? -1 : 1;
+        return new Date(b.likedAt).getTime() - new Date(a.likedAt).getTime();
       });
 
     return success({ count: list.length, likes: list });

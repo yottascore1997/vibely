@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { emitChatEvent } from "@/lib/chat-emit";
 
 export async function GET(request: Request) {
   try {
@@ -23,6 +24,8 @@ export async function GET(request: Request) {
           select: {
             id: true,
             name: true,
+            email: true,
+            phone: true,
             profile: { select: { avatarUrl: true } },
           },
         },
@@ -32,6 +35,8 @@ export async function GET(request: Request) {
               select: {
                 id: true,
                 name: true,
+                email: true,
+                phone: true,
                 profile: { select: { avatarUrl: true } },
               },
             },
@@ -43,45 +48,104 @@ export async function GET(request: Request) {
 
     // Calculate totals & balances
     let totalSpent = 0;
-    const memberBalances: Record<string, { userId: string; name: string; avatarUrl: string; netBalance: number; paidTotal: number; owedTotal: number }> = {};
+    const memberBalances: Record<
+      string,
+      {
+        userId: string;
+        name: string;
+        avatarUrl: string;
+        netBalance: number;
+        paidTotal: number;
+        owedTotal: number;
+        isWhatsAppGuest?: boolean;
+        phone?: string | null;
+        pendingSplits?: { splitId: string; expenseTitle: string; amount: number }[];
+      }
+    > = {};
+
+    const ensureMember = (u: {
+      id: string;
+      name: string | null;
+      email?: string | null;
+      phone?: string | null;
+      profile?: { avatarUrl: string | null } | null;
+    }) => {
+      if (!memberBalances[u.id]) {
+        const isWhatsAppGuest = Boolean(u.email?.endsWith("@hangora.guest"));
+        memberBalances[u.id] = {
+          userId: u.id,
+          name: u.name || (isWhatsAppGuest ? "WhatsApp Guest" : "Member"),
+          avatarUrl:
+            u.profile?.avatarUrl ||
+            "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
+          netBalance: 0,
+          paidTotal: 0,
+          owedTotal: 0,
+          isWhatsAppGuest,
+          phone: u.phone || null,
+          pendingSplits: [],
+        };
+      }
+    };
 
     for (const exp of expenses) {
       totalSpent += exp.amount;
 
-      // Payer gets credit
-      if (!memberBalances[exp.payerId]) {
-        memberBalances[exp.payerId] = {
-          userId: exp.payerId,
-          name: exp.payer.name || "Member",
-          avatarUrl: exp.payer.profile?.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
-          netBalance: 0,
-          paidTotal: 0,
-          owedTotal: 0,
-        };
-      }
+      ensureMember(exp.payer as any);
       memberBalances[exp.payerId].paidTotal += exp.amount;
 
-      // Splits
       for (const split of exp.splits) {
-        if (!memberBalances[split.userId]) {
-          memberBalances[split.userId] = {
-            userId: split.userId,
-            name: split.user.name || "Member",
-            avatarUrl: split.user.profile?.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
-            netBalance: 0,
-            paidTotal: 0,
-            owedTotal: 0,
-            pendingSplits: [],
-          } as any;
-        }
+        ensureMember(split.user as any);
         if (!split.isSettled) {
           memberBalances[split.userId].owedTotal += split.amount;
-          (memberBalances[split.userId] as any).pendingSplits.push({
+          memberBalances[split.userId].pendingSplits!.push({
             splitId: split.id,
             expenseTitle: exp.title,
             amount: split.amount,
           });
         }
+      }
+    }
+
+    // Also include hangout WhatsApp guests who have no expenses yet (so host sees them)
+    if (hangoutId) {
+      try {
+        const hangout = await prisma.hangout.findUnique({
+          where: { id: hangoutId },
+          include: {
+            participants: {
+              where: { status: "ACCEPTED" },
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    phone: true,
+                    profile: { select: { avatarUrl: true } },
+                  },
+                },
+              },
+            },
+            creator: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                profile: { select: { avatarUrl: true } },
+              },
+            },
+          },
+        });
+        if (hangout) {
+          ensureMember(hangout.creator as any);
+          for (const p of hangout.participants) {
+            ensureMember(p.user as any);
+          }
+        }
+      } catch {
+        /* ignore */
       }
     }
 
@@ -177,12 +241,32 @@ export async function POST(request: Request) {
 
           const chatContent = `💳 [VibeSplit] ${payerName} added expense: "${title}" (${formattedAmount}) — ${perPersonAmount}/person ${categoryEmoji}`;
 
-          await prisma.groupMessage.create({
+          const groupMsg = await prisma.groupMessage.create({
             data: {
               hangoutId: targetHangoutId,
               senderId: payerId,
               content: chatContent,
             },
+            include: {
+              sender: {
+                select: {
+                  name: true,
+                  profile: { select: { avatarUrl: true } },
+                },
+              },
+            },
+          });
+
+          await emitChatEvent("new_message", targetHangoutId, {
+            id: groupMsg.id,
+            text: groupMsg.content,
+            sentAt: groupMsg.createdAt.toISOString(),
+            senderId: groupMsg.senderId,
+            senderName: groupMsg.sender.name,
+            senderAvatar: groupMsg.sender.profile?.avatarUrl || null,
+            matchId: targetHangoutId,
+            isGroup: true,
+            isRead: false,
           });
         }
       } catch (chatErr) {

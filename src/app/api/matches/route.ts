@@ -18,6 +18,7 @@ function formatMatch(
       avatarUrl: string | null;
       isVerified: boolean;
       isOnline: boolean;
+      lastSeenAt?: Date | null;
       photos: { url: string }[];
       interests: { interest: { name: string; color: string | null } }[];
     } | null;
@@ -52,6 +53,7 @@ function formatMatch(
     ),
     isVerified: p?.isVerified,
     isOnline: p?.isOnline,
+    lastSeenAt: p?.lastSeenAt ? new Date(p.lastSeenAt).toISOString() : null,
     avatarUrl: p?.avatarUrl || p?.photos[0]?.url,
     interests: p?.interests.map((i: { interest: { name: string; color: string | null } }) => ({
       name: i.interest.name,

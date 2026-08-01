@@ -121,6 +121,7 @@ model Profile {
   onboardingDone    Boolean        @default(false)
   isVerified        Boolean        @default(false)
   isOnline          Boolean        @default(false)
+  lastSeenAt        DateTime?
   isPremium         Boolean        @default(false)
   diamonds          Int            @default(100)
   avatarUrl         String?
@@ -242,6 +243,7 @@ model Hangout {
   imageUrl        String?
   participants    Participant[]
   groupMessages   GroupMessage[]
+  publicInvites   Invite[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 }
@@ -294,6 +296,7 @@ model Invite {
   inviteCode    String?      @unique @default(cuid())
   senderId      String
   receiverId    String?
+  hangoutId     String?
   inviteePhone  String?
   inviteeName   String?
   isWebRsvp     Boolean      @default(false)
@@ -304,9 +307,11 @@ model Invite {
   createdAt     DateTime     @default(now())
   sender        User         @relation("SentInvites", fields: [senderId], references: [id], onDelete: Cascade)
   receiver      User?        @relation("ReceivedInvites", fields: [receiverId], references: [id], onDelete: Cascade)
+  hangout       Hangout?     @relation(fields: [hangoutId], references: [id], onDelete: SetNull)
 
   @@index([receiverId])
   @@index([inviteCode])
+  @@index([hangoutId])
 }
 
 model JarItem {

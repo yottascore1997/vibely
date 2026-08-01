@@ -29,14 +29,17 @@ function getDbConfig() {
 
 function createPrismaClient() {
   const config = getDbConfig();
+  console.log(
+    `[Prisma] Connecting host=${config.host} port=${config.port} db=${config.database} user=${config.user}`
+  );
   const adapter = new PrismaMariaDb({
     host: config.host,
     port: config.port,
     user: config.user,
     password: config.password,
     database: config.database,
-    connectionLimit: 10,
-    connectTimeout: 10000,
+    connectionLimit: 5,
+    connectTimeout: 20000,
     allowPublicKeyRetrieval: true,
   });
 

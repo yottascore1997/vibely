@@ -72,11 +72,13 @@ export async function GET(
       content: string;
       createdAt: Date;
       senderId: string;
+      isRead: boolean;
     }) => ({
       id: m.id,
       text: m.content,
       sentAt: m.createdAt.toISOString(),
       senderId: m.senderId,
+      isRead: m.isRead,
     }));
 
     return success({

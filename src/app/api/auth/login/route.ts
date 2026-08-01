@@ -41,12 +41,39 @@ export async function POST(request: Request) {
     console.error("Login error:", err);
     const msg = err instanceof Error ? err.message : String(err);
     const isDb =
-      /P1001|P1000|P1017|Can't reach|ECONNREFUSED|ETIMEDOUT|prisma|mysql|database/i.test(
+      /P1001|P1000|P1017|Can't reach|ECONNREFUSED|ETIMEDOUT|prisma|mysql|database|Pool|connect/i.test(
         msg
       );
+
+    // One soft retry — Railway MySQL / pool can flake on cold start
+    if (isDb) {
+      try {
+        await new Promise((r) => setTimeout(r, 800));
+        const user = await prisma.user.findUnique({
+          where: { email },
+          include: { profile: true },
+        });
+        if (!user || !(await verifyPassword(password, user.passwordHash))) {
+          return error("Invalid email or password", 401);
+        }
+        const token = signToken(user.id, user.email);
+        return success({
+          token,
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            onboardingDone: user.profile?.onboardingDone ?? false,
+          },
+        });
+      } catch (retryErr) {
+        console.error("Login retry error:", retryErr);
+      }
+    }
+
     return error(
       isDb
-        ? "Database error. MySQL check karo — DATABASE_URL / MySQL service down."
+        ? "Database error. MySQL check karo — Railway DATABASE_URL / MySQL service."
         : "Login failed. Please try again.",
       500
     );

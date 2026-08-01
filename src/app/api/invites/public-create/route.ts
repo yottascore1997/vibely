@@ -17,7 +17,14 @@ export async function POST(request: NextRequest) {
     } catch {
       body = {};
     }
-    const { activityName, activityEmoji, timeLabel, inviteeName, inviteePhone } = body;
+    const {
+      activityName,
+      activityEmoji,
+      timeLabel,
+      inviteeName,
+      inviteePhone,
+      hangoutId,
+    } = body;
 
     if (!activityName || !activityEmoji || !timeLabel) {
       return error("activityName, activityEmoji, and timeLabel are required", 400);
@@ -32,11 +39,23 @@ export async function POST(request: NextRequest) {
       return error("Sender not found", 404);
     }
 
-    const code = Math.random().toString(36).substring(2, 10) + Date.now().toString(36).substring(4);
+    // Optional: verify hangout belongs to sender
+    let linkedHangoutId: string | null = null;
+    if (hangoutId && typeof hangoutId === "string") {
+      const hangout = await prisma.hangout.findUnique({ where: { id: hangoutId } });
+      if (hangout && hangout.creatorId === senderId) {
+        linkedHangoutId = hangout.id;
+      }
+    }
+
+    const code =
+      Math.random().toString(36).substring(2, 10) +
+      Date.now().toString(36).substring(4);
     const invite = await prisma.invite.create({
       data: {
         inviteCode: code,
         senderId,
+        hangoutId: linkedHangoutId,
         activityName,
         activityEmoji,
         timeLabel,
@@ -50,25 +69,34 @@ export async function POST(request: NextRequest) {
     });
 
     const host = request.headers.get("host") || "localhost:3000";
-    const protocol = host.includes("localhost") || host.includes("127.0.0.1") || host.includes("192.168.") ? "http" : "https";
+    const protocol =
+      host.includes("localhost") ||
+      host.includes("127.0.0.1") ||
+      host.includes("192.168.")
+        ? "http"
+        : "https";
     const inviteUrl = `${protocol}://${host}/p/${invite.inviteCode}`;
 
     const senderName = sender.profile?.firstName || sender.name || "A friend";
-    const shareMessage = `Hey! ${senderName} invited you to go out for ${activityName} ${activityEmoji} on VibeMatch!\n\nTap link to view & RSVP: ${inviteUrl}`;
+    const shareMessage = `Hey! ${senderName} invited you to go out for ${activityName} ${activityEmoji} on Hangora!\n\nTap link to view & RSVP: ${inviteUrl}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
 
-    return success({
-      id: invite.id,
-      inviteCode: invite.inviteCode,
-      inviteUrl,
-      whatsappUrl,
-      shareMessage,
-      senderName,
-      activityEmoji: invite.activityEmoji,
-      activityName: invite.activityName,
-      timeLabel: invite.timeLabel,
-      status: "pending",
-    }, 201);
+    return success(
+      {
+        id: invite.id,
+        inviteCode: invite.inviteCode,
+        hangoutId: linkedHangoutId,
+        inviteUrl,
+        whatsappUrl,
+        shareMessage,
+        senderName,
+        activityEmoji: invite.activityEmoji,
+        activityName: invite.activityName,
+        timeLabel: invite.timeLabel,
+        status: "pending",
+      },
+      201
+    );
   } catch (err) {
     console.error("Create public invite error:", err);
     return error("Failed to create public invite", 500);

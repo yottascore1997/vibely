@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
   inviteCode: string;
@@ -9,7 +9,12 @@ interface Props {
   initialInviteeName?: string;
 }
 
-export default function RsvpCard({ inviteCode, senderName, initialStatus, initialInviteeName }: Props) {
+export default function RsvpCard({
+  inviteCode,
+  senderName,
+  initialStatus,
+  initialInviteeName,
+}: Props) {
   const [name, setName] = useState(initialInviteeName || "");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -17,12 +22,20 @@ export default function RsvpCard({ inviteCode, senderName, initialStatus, initia
   const [rsvpStatus, setRsvpStatus] = useState<string | null>(
     initialStatus !== "pending" ? initialStatus : null
   );
+  const [addedToPlan, setAddedToPlan] = useState<boolean | null>(null);
+  const [syncNote, setSyncNote] = useState("");
 
-  const handleRSVP = async (status: "accepted" | "rejected") => {
-    setErrorMessage("");
-    setSubmitting(true);
+  const submitRsvp = async (
+    status: "accepted" | "rejected",
+    opts?: { silent?: boolean; nameOverride?: string; phoneOverride?: string }
+  ) => {
+    if (!opts?.silent) {
+      setErrorMessage("");
+      setSubmitting(true);
+    }
 
-    const finalName = name.trim() || "Guest";
+    const finalName = (opts?.nameOverride ?? name).trim() || "Guest";
+    const finalPhone = (opts?.phoneOverride ?? phone).trim();
 
     try {
       const res = await fetch("/api/invites/public-rsvp", {
@@ -31,24 +44,61 @@ export default function RsvpCard({ inviteCode, senderName, initialStatus, initia
         body: JSON.stringify({
           inviteCode,
           name: finalName,
-          phone: phone.trim(),
+          phone: finalPhone,
           status,
         }),
       });
       const data = await res.json();
+      const payload = data?.data ?? data;
+
       if (res.ok && data.success) {
-        if (!name.trim()) {
-          setName(finalName);
-        }
+        if (!name.trim()) setName(finalName);
         setRsvpStatus(status);
-      } else {
+        if (status === "accepted") {
+          setAddedToPlan(Boolean(payload?.addedToPlan));
+          if (payload?.addedToPlan) {
+            setSyncNote(
+              payload?.alreadyMember
+                ? "You're already on the host's plan & VibeSplit."
+                : "You've been added to the host's group chat & VibeSplit."
+            );
+          } else {
+            setSyncNote(
+              payload?.failReason ||
+                "Host needs to share invite from Create Plan so you're linked to the hangout."
+            );
+          }
+        }
+        return true;
+      }
+
+      if (!opts?.silent) {
         setErrorMessage(data.error || "Failed to submit RSVP");
       }
-    } catch (err) {
-      setErrorMessage("Network error: Failed to connect to server");
+      return false;
+    } catch {
+      if (!opts?.silent) {
+        setErrorMessage("Network error: Failed to connect to server");
+      }
+      return false;
     } finally {
-      setSubmitting(false);
+      if (!opts?.silent) setSubmitting(false);
     }
+  };
+
+  // If guest already said I'm Coming earlier (before fix), re-sync onto plan
+  useEffect(() => {
+    if (initialStatus === "accepted") {
+      submitRsvp("accepted", {
+        silent: true,
+        nameOverride: initialInviteeName || "Guest",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inviteCode, initialStatus]);
+
+  const handleRSVP = (status: "accepted" | "rejected") => {
+    void submitRsvp(status);
   };
 
   if (rsvpStatus) {
@@ -62,6 +112,25 @@ export default function RsvpCard({ inviteCode, senderName, initialStatus, initia
             <p className="text-sm text-gray-300">
               Awesome {displayName}! {senderName} has been notified that you are coming.
             </p>
+            {syncNote ? (
+              <p
+                className={`text-xs font-semibold ${
+                  addedToPlan ? "text-emerald-300" : "text-amber-300"
+                }`}
+              >
+                {syncNote}
+              </p>
+            ) : null}
+            {addedToPlan === false ? (
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => handleRSVP("accepted")}
+                className="mt-2 px-4 py-2 rounded-xl bg-white/10 text-sm font-bold text-white border border-white/15"
+              >
+                {submitting ? "Syncing…" : "Retry add to plan"}
+              </button>
+            ) : null}
           </div>
         ) : (
           <div className="p-5 bg-rose-500/10 border border-rose-500/30 rounded-2xl space-y-2">
@@ -101,11 +170,12 @@ export default function RsvpCard({ inviteCode, senderName, initialStatus, initia
 
         <div>
           <label className="block text-xs font-semibold text-gray-400 mb-1">
-            Phone Number <span className="text-gray-500 font-normal">(Optional)</span>
+            Phone Number{" "}
+            <span className="text-amber-400/90 font-normal">(needed for bill WhatsApp)</span>
           </label>
           <input
             type="tel"
-            placeholder="For WhatsApp updates"
+            placeholder="10-digit WhatsApp number"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="w-full px-4 py-3 bg-[#0D0D14] border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-[#8A56FF] transition"
@@ -113,14 +183,12 @@ export default function RsvpCard({ inviteCode, senderName, initialStatus, initia
         </div>
       </div>
 
-      {/* Inline Error Message */}
       {errorMessage && (
         <p className="text-xs font-semibold text-rose-400 text-center animate-bounce">
           {errorMessage}
         </p>
       )}
 
-      {/* Action Buttons */}
       <div className="grid grid-cols-2 gap-3 pt-2">
         <button
           type="button"
