@@ -32,13 +32,19 @@ export async function POST(request: NextRequest) {
           ? JSON.stringify(body.languages)
           : undefined;
 
+    const GENDERS = new Set(["MALE", "FEMALE", "OTHER"]);
+    const INTERESTED = new Set(["MEN", "WOMEN", "EVERYONE"]);
+
+    const genderRaw = String(body.gender || "").toUpperCase();
+    const interestedRaw = String(body.interestedIn || "").toUpperCase();
+
     const profileData = {
       firstName: body.firstName || undefined,
       bio: body.bio || undefined,
-      dateOfBirth: dob,
+      dateOfBirth: dob || undefined,
       age: dob ? calcAge(dob) : undefined,
-      gender: body.gender || undefined,
-      interestedIn: body.interestedIn || undefined,
+      gender: GENDERS.has(genderRaw) ? genderRaw : undefined,
+      interestedIn: INTERESTED.has(interestedRaw) ? interestedRaw : undefined,
       pronouns: body.pronouns || undefined,
       jobTitle: body.occupation || body.jobTitle || undefined,
       company: body.company || undefined,
@@ -53,11 +59,15 @@ export async function POST(request: NextRequest) {
       diet: body.diet || undefined,
       pets: body.pets || undefined,
       zodiac: body.zodiac || undefined,
-      minAge: body.minAge ? Number(body.minAge) : undefined,
-      maxAge: body.maxAge ? Number(body.maxAge) : undefined,
-      maxDistance: body.maxDistance ? Number(body.maxDistance) : undefined,
+      minAge: body.minAge != null ? Number(body.minAge) : undefined,
+      maxAge: body.maxAge != null ? Number(body.maxAge) : undefined,
+      maxDistance: body.maxDistance != null ? Number(body.maxDistance) : undefined,
       genderPreference: body.genderPreference || undefined,
-      lookingFor: body.lookingFor ? JSON.stringify(body.lookingFor) : undefined,
+      lookingFor: Array.isArray(body.lookingFor)
+        ? JSON.stringify(body.lookingFor)
+        : typeof body.lookingFor === "string"
+          ? body.lookingFor
+          : undefined,
       avatarUrl: body.avatarUrl || undefined,
       city: body.city || undefined,
       latitude:
@@ -71,6 +81,11 @@ export async function POST(request: NextRequest) {
       onboardingDone: body.onboardingDone === false ? false : true,
     };
 
+    // Strip undefined so Prisma upsert doesn't choke on empty enums
+    const clean = Object.fromEntries(
+      Object.entries(profileData).filter(([, v]) => v !== undefined)
+    );
+
     if (body.firstName) {
       await prisma.user.update({
         where: { id: authUser.userId },
@@ -80,13 +95,14 @@ export async function POST(request: NextRequest) {
 
     const profile = await prisma.profile.upsert({
       where: { userId: authUser.userId },
-      update: profileData,
-      create: { userId: authUser.userId, ...profileData },
+      update: clean,
+      create: { userId: authUser.userId, ...clean },
     });
 
-    if (body.interests?.length) {
+    if (Array.isArray(body.interests) && body.interests.length) {
       await prisma.userInterest.deleteMany({ where: { profileId: profile.id } });
       for (const name of body.interests) {
+        if (!name || typeof name !== "string") continue;
         const interest = await prisma.interest.upsert({
           where: { name },
           update: {},

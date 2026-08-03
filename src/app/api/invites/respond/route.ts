@@ -5,6 +5,46 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
+async function notify(userId: string, title: string, message: string, type: string) {
+  try {
+    await prisma.notification.create({
+      data: { userId, title, message, type },
+    });
+  } catch {
+    /* soft fail */
+  }
+}
+
+/** Best-effort parse "6 PM · TODAY" / "Today 6 PM" / "Soon" → Date */
+function parseInviteTime(timeLabel?: string | null): Date {
+  const fallback = new Date(Date.now() + 60 * 60 * 1000);
+  if (!timeLabel) return fallback;
+  const raw = timeLabel.trim();
+  const lower = raw.toLowerCase();
+
+  const now = new Date();
+  let dayOffset = 0;
+  if (lower.includes("tomorrow")) dayOffset = 1;
+  else if (lower.includes("today") || lower.includes("tonight")) dayOffset = 0;
+
+  const m = raw.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);
+  if (!m) return fallback;
+
+  let hour = parseInt(m[1], 10);
+  const minute = m[2] ? parseInt(m[2], 10) : 0;
+  const ap = m[3].toLowerCase();
+  if (ap === "pm" && hour < 12) hour += 12;
+  if (ap === "am" && hour === 12) hour = 0;
+
+  const d = new Date(now);
+  d.setDate(d.getDate() + dayOffset);
+  d.setHours(hour, minute, 0, 0);
+  if (d.getTime() < now.getTime() - 5 * 60 * 1000) {
+    d.setDate(d.getDate() + 1);
+  }
+  return d;
+}
+
 export async function POST(request: NextRequest) {
   const auth = getAuthUser(request);
   if (!auth) return unauthorized();
@@ -12,33 +52,177 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { inviteId, status } = body;
+    const {
+      inviteId,
+      status,
+      activityName,
+      activityEmoji,
+      timeLabel,
+    } = body;
 
     if (!inviteId || !status) {
       return error("inviteId and status are required", 400);
     }
 
-    const dbStatus = status.toUpperCase();
-    if (dbStatus !== "ACCEPTED" && dbStatus !== "REJECTED") {
-      return error("Invalid status (must be accepted or rejected)", 400);
+    const action = String(status).toLowerCase();
+    if (!["accepted", "rejected", "counter"].includes(action)) {
+      return error("Invalid status (accepted | rejected | counter)", 400);
     }
 
-    const existing = await prisma.invite.findUnique({ where: { id: inviteId } });
-    if (!existing) {
-      return error("Invite not found", 404);
+    const existing = await prisma.invite.findUnique({
+      where: { id: inviteId },
+      include: {
+        sender: { include: { profile: true } },
+        receiver: { include: { profile: true } },
+        hangout: true,
+      },
+    });
+
+    if (!existing) return error("Invite not found", 404);
+    if (existing.receiverId !== userId) return error("Forbidden", 403);
+    if (existing.status !== "PENDING") {
+      return error("Invite already responded", 400);
     }
-    if (existing.receiverId !== userId) {
-      return error("Forbidden", 403);
+
+    /* ── Counter offer ── */
+    if (action === "counter") {
+      if (!activityName || !activityEmoji) {
+        return error("activityName and activityEmoji required for counter", 400);
+      }
+
+      const counterTime = timeLabel || existing.timeLabel || "Soon";
+
+      const [updated, counterInvite] = await prisma.$transaction([
+        prisma.invite.update({
+          where: { id: inviteId },
+          data: { status: "COUNTERED" },
+        }),
+        prisma.invite.create({
+          data: {
+            senderId: userId,
+            receiverId: existing.senderId,
+            hangoutId: existing.hangoutId || undefined,
+            activityName,
+            activityEmoji,
+            timeLabel: counterTime,
+            status: "PENDING",
+            isCounter: true,
+            parentInviteId: inviteId,
+          },
+          include: {
+            sender: { include: { profile: true, socialStatus: true } },
+            receiver: { include: { profile: true, socialStatus: true } },
+          },
+        }),
+      ]);
+
+      await notify(
+        existing.senderId,
+        "Counter offer 🔄",
+        `${existing.receiver?.name || "Someone"} countered ${existing.activityEmoji} ${existing.activityName} with ${activityEmoji} ${activityName}`,
+        "INVITE_COUNTER"
+      );
+
+      return success({
+        id: updated.id,
+        status: "countered",
+        counterInvite: {
+          id: counterInvite.id,
+          activityName: counterInvite.activityName,
+          activityEmoji: counterInvite.activityEmoji,
+          timeLabel: counterInvite.timeLabel,
+          status: "pending",
+          isCounter: true,
+          senderName: counterInvite.sender.name,
+          recipientName: counterInvite.receiver?.name || "You",
+        },
+      });
+    }
+
+    /* ── Accept / Reject ── */
+    const dbStatus = action === "accepted" ? "ACCEPTED" : "REJECTED";
+    let hangoutId: string | null = existing.hangoutId;
+    let scheduledAt: string | null = existing.hangout?.scheduledAt?.toISOString() || null;
+
+    if (action === "accepted") {
+      if (hangoutId) {
+        // Join existing plan — ensure receiver is ACCEPTED participant
+        await prisma.participant.upsert({
+          where: {
+            hangoutId_userId: { hangoutId, userId },
+          },
+          create: { hangoutId, userId, status: "ACCEPTED" },
+          update: { status: "ACCEPTED" },
+        });
+        const h = await prisma.hangout.findUnique({ where: { id: hangoutId } });
+        scheduledAt = h?.scheduledAt?.toISOString() || scheduledAt;
+      } else {
+        const when = parseInviteTime(existing.timeLabel);
+        const title = `${existing.activityEmoji} ${existing.activityName}`;
+        const hangout = await prisma.hangout.create({
+          data: {
+            title,
+            description: `Joined via invite · ${existing.timeLabel}`,
+            scheduledAt: when,
+            maxParticipants: 4,
+            creatorId: existing.senderId,
+            kind: "HANGOUT",
+            visibility: "FRIENDS",
+            isPrivate: true,
+            status: "OPEN",
+            participants: {
+              create: [
+                { userId: existing.senderId, status: "ACCEPTED" },
+                { userId: userId, status: "ACCEPTED" },
+              ],
+            },
+          },
+        });
+        hangoutId = hangout.id;
+        scheduledAt = hangout.scheduledAt.toISOString();
+      }
     }
 
     const invite = await prisma.invite.update({
       where: { id: inviteId },
-      data: { status: dbStatus },
+      data: {
+        status: dbStatus,
+        ...(hangoutId ? { hangoutId } : {}),
+      },
     });
+
+    if (action === "accepted") {
+      await notify(
+        existing.senderId,
+        "Hang joined! ✨",
+        `${existing.receiver?.name || "Someone"} joined your ${existing.activityEmoji} ${existing.activityName}`,
+        "INVITE_ACCEPTED"
+      );
+    } else {
+      await notify(
+        existing.senderId,
+        "Invite declined",
+        `${existing.receiver?.name || "Someone"} declined ${existing.activityEmoji} ${existing.activityName}`,
+        "INVITE_REJECTED"
+      );
+    }
 
     return success({
       id: invite.id,
       status: invite.status.toLowerCase(),
+      hangoutId,
+      scheduledAt,
+      activityName: existing.activityName,
+      activityEmoji: existing.activityEmoji,
+      timeLabel: existing.timeLabel,
+      partnerName:
+        action === "accepted"
+          ? existing.sender.name
+          : existing.receiver?.name || null,
+      partnerAvatar:
+        action === "accepted"
+          ? existing.sender.profile?.avatarUrl || null
+          : existing.receiver?.profile?.avatarUrl || null,
     });
   } catch (err) {
     console.error("Respond invite error:", err);

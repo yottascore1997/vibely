@@ -481,10 +481,10 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = 3001;
+const PORT = Number(process.env.PORT) || 3001;
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`===============================================`);
-  console.log(`Hangora Chat Server running on http://localhost:${PORT}`);
+  console.log(`Hangora Chat Server running on 0.0.0.0:${PORT}`);
   console.log(`===============================================`);
 });
 
