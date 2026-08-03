@@ -308,6 +308,7 @@ model Invite {
   timeLabel     String
   status        InviteStatus @default(PENDING)
   createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @default(now()) @updatedAt
   sender        User         @relation("SentInvites", fields: [senderId], references: [id], onDelete: Cascade)
   receiver      User?        @relation("ReceivedInvites", fields: [receiverId], references: [id], onDelete: Cascade)
   hangout       Hangout?     @relation(fields: [hangoutId], references: [id], onDelete: SetNull)

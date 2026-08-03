@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
       parentInviteId: inv.parentInviteId || null,
       hangoutId: inv.hangoutId || null,
       createdAt: inv.createdAt,
+      updatedAt: inv.updatedAt || inv.createdAt,
     }));
 
     return success(list);
