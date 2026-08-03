@@ -25,27 +25,87 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    const list = invites.map((inv: any) => ({
-      id: inv.id,
-      senderId: inv.senderId,
-      receiverId: inv.receiverId,
-      senderName: inv.sender.name,
-      senderAvatar: inv.sender.profile?.avatarUrl,
-      senderEnergy: inv.sender.socialStatus?.energy || "MAYBE",
-      recipientName: inv.receiver?.name || inv.inviteeName || "Guest",
-      recipientAvatar: inv.receiver?.profile?.avatarUrl || null,
-      recipientEnergy: inv.receiver?.socialStatus?.energy || "MAYBE",
-      activityEmoji: inv.activityEmoji,
-      activityName: inv.activityName,
-      timeLabel: inv.timeLabel,
-      status: inv.status.toLowerCase(),
-      type: inv.senderId === userId ? "sent" : "received",
-      isCounter: !!inv.isCounter,
-      parentInviteId: inv.parentInviteId || null,
-      hangoutId: inv.hangoutId || null,
-      createdAt: inv.createdAt,
-      updatedAt: inv.updatedAt || inv.createdAt,
-    }));
+    const parentIds = [
+      ...new Set(
+        invites
+          .map((inv: any) => inv.parentInviteId)
+          .filter((id: string | null | undefined): id is string => !!id)
+      ),
+    ];
+    const parents =
+      parentIds.length > 0
+        ? await prisma.invite.findMany({
+            where: { id: { in: parentIds } },
+            include: { sender: { select: { name: true } } },
+          })
+        : [];
+    const parentMap = new Map(parents.map((p) => [p.id, p]));
+
+    const list = invites.map((inv: any) => {
+      const parent = inv.parentInviteId ? parentMap.get(inv.parentInviteId) : null;
+      return {
+        id: inv.id,
+        senderId: inv.senderId,
+        receiverId: inv.receiverId,
+        senderName: inv.sender.name,
+        senderAvatar: inv.sender.profile?.avatarUrl,
+        senderEnergy: inv.sender.socialStatus?.energy || "MAYBE",
+        recipientName: inv.receiver?.name || inv.inviteeName || "Guest",
+        recipientAvatar: inv.receiver?.profile?.avatarUrl || null,
+        recipientEnergy: inv.receiver?.socialStatus?.energy || "MAYBE",
+        activityEmoji: inv.activityEmoji,
+        activityName: inv.activityName,
+        timeLabel: inv.timeLabel,
+        status: inv.status.toLowerCase(),
+        type: inv.senderId === userId ? "sent" : "received",
+        isCounter: !!inv.isCounter,
+        parentInviteId: inv.parentInviteId || null,
+        parentActivity: parent
+          ? {
+              activityName: parent.activityName,
+              activityEmoji: parent.activityEmoji,
+              senderName: parent.sender?.name || "You",
+            }
+          : null,
+        hangoutId: inv.hangoutId || null,
+        createdAt: inv.createdAt,
+        updatedAt: inv.updatedAt || inv.createdAt,
+        settle: (() => {
+          if (!inv.settleData) return null;
+          try {
+            const d = JSON.parse(inv.settleData);
+            if (!d || (d.status !== "playing" && d.status !== "done")) return null;
+            const otherId =
+              inv.senderId === userId ? inv.receiverId : inv.senderId;
+            const cur =
+              d.rounds?.find((r: any) => r.round === d.currentRound) ||
+              d.rounds?.[d.rounds.length - 1];
+            const myMove = cur?.moves?.[userId] ?? null;
+            const rounds = (d.rounds || []).map((r: any) => {
+              if (r.resolved) return r;
+              return {
+                ...r,
+                moves: {
+                  [userId]: r.moves?.[userId] ?? null,
+                  [otherId]: null,
+                },
+              };
+            });
+            return {
+              ...d,
+              rounds,
+              myMove,
+              theirMove: cur?.resolved ? cur?.moves?.[otherId] ?? null : null,
+              waitingForOpponent: !!(myMove && !cur?.resolved),
+              myScore: d.scores?.[userId] || 0,
+              theirScore: d.scores?.[otherId] || 0,
+            };
+          } catch {
+            return null;
+          }
+        })(),
+      };
+    });
 
     return success(list);
   } catch (err) {

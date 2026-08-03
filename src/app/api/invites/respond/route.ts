@@ -79,7 +79,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (!existing) return error("Invite not found", 404);
-    if (existing.receiverId !== userId) return error("Forbidden", 403);
+    const isParty =
+      existing.receiverId === userId || existing.senderId === userId;
+    if (!isParty) return error("Forbidden", 403);
+    // Accept / counter: only the receiver. Reject: either party (e.g. mid-settle).
+    if (action !== "rejected" && existing.receiverId !== userId) {
+      return error("Forbidden", 403);
+    }
 
     // Idempotent accept: client may retry after a flaky network response
     if (existing.status === "ACCEPTED" && action === "accepted") {
@@ -160,6 +166,16 @@ export async function POST(request: NextRequest) {
     let hangoutId: string | null = existing.hangoutId;
     let scheduledAt: string | null = existing.hangout?.scheduledAt?.toISOString() || null;
 
+    // RPS settle / override: allow accepting with a chosen winning activity
+    const finalActivityName =
+      action === "accepted" && activityName
+        ? String(activityName)
+        : existing.activityName;
+    const finalActivityEmoji =
+      action === "accepted" && activityEmoji
+        ? String(activityEmoji)
+        : existing.activityEmoji;
+
     if (action === "accepted") {
       if (hangoutId) {
         // Join existing plan — ensure receiver is ACCEPTED participant
@@ -174,7 +190,7 @@ export async function POST(request: NextRequest) {
         scheduledAt = h?.scheduledAt?.toISOString() || scheduledAt;
       } else {
         const when = parseInviteTime(existing.timeLabel);
-        const title = `${existing.activityEmoji} ${existing.activityName}`;
+        const title = `${finalActivityEmoji} ${finalActivityName}`;
         const hangout = await prisma.hangout.create({
           data: {
             title,
@@ -204,6 +220,9 @@ export async function POST(request: NextRequest) {
       data: {
         status: dbStatus,
         ...(hangoutId ? { hangoutId } : {}),
+        ...(action === "accepted" && activityName
+          ? { activityName: finalActivityName, activityEmoji: finalActivityEmoji }
+          : {}),
       },
     });
 
@@ -211,16 +230,26 @@ export async function POST(request: NextRequest) {
       await notify(
         existing.senderId,
         "Hang joined! ✨",
-        `${existing.receiver?.name || "Someone"} joined your ${existing.activityEmoji} ${existing.activityName}`,
+        `${existing.receiver?.name || "Someone"} joined your ${finalActivityEmoji} ${finalActivityName}`,
         "INVITE_ACCEPTED"
       );
     } else {
-      await notify(
-        existing.senderId,
-        "Invite declined",
-        `${existing.receiver?.name || "Someone"} declined ${existing.activityEmoji} ${existing.activityName}`,
-        "INVITE_REJECTED"
-      );
+      const otherId =
+        userId === existing.senderId
+          ? existing.receiverId
+          : existing.senderId;
+      const actorName =
+        userId === existing.senderId
+          ? existing.sender.name
+          : existing.receiver?.name || "Someone";
+      if (otherId) {
+        await notify(
+          otherId,
+          "Invite declined",
+          `${actorName} declined ${existing.activityEmoji} ${existing.activityName}`,
+          "INVITE_REJECTED"
+        );
+      }
     }
 
     return success({
@@ -228,8 +257,8 @@ export async function POST(request: NextRequest) {
       status: invite.status.toLowerCase(),
       hangoutId,
       scheduledAt,
-      activityName: existing.activityName,
-      activityEmoji: existing.activityEmoji,
+      activityName: finalActivityName,
+      activityEmoji: finalActivityEmoji,
       timeLabel: existing.timeLabel,
       partnerName:
         action === "accepted"

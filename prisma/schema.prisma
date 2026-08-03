@@ -307,6 +307,8 @@ model Invite {
   activityEmoji String
   timeLabel     String
   status        InviteStatus @default(PENDING)
+  /** JSON: multiplayer RPS settle state (best of 3) */
+  settleData    String?      @db.Text
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @default(now()) @updatedAt
   sender        User         @relation("SentInvites", fields: [senderId], references: [id], onDelete: Cascade)
