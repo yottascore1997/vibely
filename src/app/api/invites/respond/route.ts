@@ -80,6 +80,22 @@ export async function POST(request: NextRequest) {
 
     if (!existing) return error("Invite not found", 404);
     if (existing.receiverId !== userId) return error("Forbidden", 403);
+
+    // Idempotent accept: client may retry after a flaky network response
+    if (existing.status === "ACCEPTED" && action === "accepted") {
+      return success({
+        id: existing.id,
+        status: "accepted",
+        hangoutId: existing.hangoutId,
+        scheduledAt: existing.hangout?.scheduledAt?.toISOString() || null,
+        activityName: existing.activityName,
+        activityEmoji: existing.activityEmoji,
+        timeLabel: existing.timeLabel,
+        partnerName: existing.sender.name,
+        partnerAvatar: existing.sender.profile?.avatarUrl || null,
+      });
+    }
+
     if (existing.status !== "PENDING") {
       return error("Invite already responded", 400);
     }

@@ -3,8 +3,21 @@ import jwt from "jsonwebtoken";
 import { NextRequest } from "next/server";
 import { error } from "./api-response";
 
+/** Strip quotes/whitespace — Railway UI often saves `"secret"` with quotes */
+export function normalizeJwtSecret(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  let s = String(raw).trim();
+  if (
+    (s.startsWith('"') && s.endsWith('"')) ||
+    (s.startsWith("'") && s.endsWith("'"))
+  ) {
+    s = s.slice(1, -1).trim();
+  }
+  return s || undefined;
+}
+
 function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
+  const secret = normalizeJwtSecret(process.env.JWT_SECRET);
   if (secret) return secret;
 
   // Next.js evaluates route modules during `next build` with NODE_ENV=production.

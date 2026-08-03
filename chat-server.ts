@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -8,12 +9,35 @@ import { prisma } from "./src/lib/prisma";
 import { evaluateChatGate } from "./src/lib/match-chat-rules";
 import { expireStaleMatches } from "./src/lib/expire-matches";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-key";
-const INTERNAL_SECRET =
-  process.env.CHAT_INTERNAL_SECRET || process.env.JWT_SECRET || "dev-secret-key";
+/** Strip quotes/whitespace — Railway UI often saves `"secret"` with quotes */
+function normalizeSecret(raw: string | undefined, fallback: string) {
+  if (!raw) return fallback;
+  let s = String(raw).trim();
+  if (
+    (s.startsWith('"') && s.endsWith('"')) ||
+    (s.startsWith("'") && s.endsWith("'"))
+  ) {
+    s = s.slice(1, -1).trim();
+  }
+  return s || fallback;
+}
+
+const JWT_SECRET = normalizeSecret(process.env.JWT_SECRET, "dev-secret-key");
+const INTERNAL_SECRET = normalizeSecret(
+  process.env.CHAT_INTERNAL_SECRET || process.env.JWT_SECRET,
+  "dev-secret-key"
+);
+
+const jwtFingerprint = crypto
+  .createHash("sha256")
+  .update(JWT_SECRET)
+  .digest("hex")
+  .slice(0, 8);
 
 if (!process.env.JWT_SECRET) {
   console.warn("[ChatServer] JWT_SECRET not set — using insecure dev default");
+} else {
+  console.log(`[ChatServer] JWT_SECRET loaded (fp=${jwtFingerprint})`);
 }
 
 const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || "*")
@@ -85,6 +109,19 @@ async function setUserOffline(userId: string) {
 }
 
 const server = createServer(async (req, res) => {
+  if (req.method === "GET" && (req.url === "/" || req.url === "/health")) {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        ok: true,
+        service: "hangora-chat",
+        jwtConfigured: !!process.env.JWT_SECRET,
+        jwtFp: jwtFingerprint,
+      })
+    );
+    return;
+  }
+
   if (req.method === "POST" && req.url === "/internal/emit") {
     const secret = req.headers["x-internal-secret"];
     if (secret !== INTERNAL_SECRET) {
@@ -119,8 +156,8 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.end("Hangora Chat Server is running.\n");
+  res.writeHead(404, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ error: "not found" }));
 });
 
 const io = new Server(server, {
@@ -149,7 +186,9 @@ io.use((socket, next) => {
 
     (socket.data as { userId: string }).userId = payload.userId;
     next();
-  } catch {
+  } catch (err) {
+    const name = err instanceof Error ? err.name : "Error";
+    console.warn(`[ChatServer] JWT verify failed (${name}) fp=${jwtFingerprint}`);
     next(new Error("Unauthorized: invalid token"));
   }
 });

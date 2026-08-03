@@ -1,0 +1,12 @@
+# Use this as Railway config for the CHAT service only.
+# Settings → Config-as-code → set path to railway.chat.toml
+# OR set Start Command manually to: npm run start:chat
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm install && npx prisma generate"
+
+[deploy]
+startCommand = "npm run start:chat"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
