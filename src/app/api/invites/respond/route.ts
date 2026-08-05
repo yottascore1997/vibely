@@ -28,17 +28,33 @@ function parseInviteTime(timeLabel?: string | null): Date {
   else if (lower.includes("today") || lower.includes("tonight")) dayOffset = 0;
 
   const m = raw.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);
-  if (!m) return fallback;
+  if (m) {
+    let hour = parseInt(m[1], 10);
+    const minute = m[2] ? parseInt(m[2], 10) : 0;
+    const ap = m[3].toLowerCase();
+    if (ap === "pm" && hour < 12) hour += 12;
+    if (ap === "am" && hour === 12) hour = 0;
 
-  let hour = parseInt(m[1], 10);
-  const minute = m[2] ? parseInt(m[2], 10) : 0;
-  const ap = m[3].toLowerCase();
-  if (ap === "pm" && hour < 12) hour += 12;
-  if (ap === "am" && hour === 12) hour = 0;
+    const d = new Date(now);
+    d.setDate(d.getDate() + dayOffset);
+    d.setHours(hour, minute, 0, 0);
+    if (d.getTime() < now.getTime() - 5 * 60 * 1000) {
+      d.setDate(d.getDate() + 1);
+    }
+    return d;
+  }
+
+  // Period labels from create-plan: Morning / Afternoon / Night
+  let hour = 15;
+  if (lower.includes("morning")) hour = 10;
+  else if (lower.includes("afternoon")) hour = 15;
+  else if (lower.includes("night") || lower.includes("tonight")) hour = 21;
+  else if (lower.includes("evening")) hour = 18;
+  else return fallback;
 
   const d = new Date(now);
   d.setDate(d.getDate() + dayOffset);
-  d.setHours(hour, minute, 0, 0);
+  d.setHours(hour, 0, 0, 0);
   if (d.getTime() < now.getTime() - 5 * 60 * 1000) {
     d.setDate(d.getDate() + 1);
   }
@@ -58,7 +74,12 @@ export async function POST(request: NextRequest) {
       activityName,
       activityEmoji,
       timeLabel,
+      remark,
+      note,
     } = body;
+    const joinNote = String(remark || note || "")
+      .trim()
+      .slice(0, 200);
 
     if (!inviteId || !status) {
       return error("inviteId and status are required", 400);
@@ -227,10 +248,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (action === "accepted") {
+      const who = existing.receiver?.name || "Someone";
+      const base = `${who} joined your ${finalActivityEmoji} ${finalActivityName}`;
       await notify(
         existing.senderId,
         "Hang joined! ✨",
-        `${existing.receiver?.name || "Someone"} joined your ${finalActivityEmoji} ${finalActivityName}`,
+        joinNote ? `${base}\n“${joinNote}”` : base,
         "INVITE_ACCEPTED"
       );
     } else {

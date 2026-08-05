@@ -17,6 +17,15 @@ export async function POST(
     const { id } = await params;
     await syncHangoutLifecycle(id);
 
+    const body = await request.json().catch(() => ({} as Record<string, unknown>));
+    const rawRemark =
+      typeof body?.remark === "string"
+        ? body.remark
+        : typeof body?.note === "string"
+          ? body.note
+          : "";
+    const joinRemark = rawRemark.trim().slice(0, 200) || null;
+
     const hangout = await prisma.hangout.findUnique({
       where: { id },
       include: { participants: true },
@@ -80,11 +89,16 @@ export async function POST(
     if (existing?.status === "REJECTED") {
       await prisma.participant.update({
         where: { id: existing.id },
-        data: { status: "PENDING", rejectRemark: null },
+        data: { status: "PENDING", rejectRemark: joinRemark },
       });
     } else {
       await prisma.participant.create({
-        data: { hangoutId: id, userId, status: "PENDING" },
+        data: {
+          hangoutId: id,
+          userId,
+          status: "PENDING",
+          rejectRemark: joinRemark,
+        },
       });
     }
 

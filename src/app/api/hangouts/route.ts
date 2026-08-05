@@ -103,16 +103,32 @@ function formatPlan(
     scheduledAt: h.scheduledAt,
     endDate: h.endDate,
     time: scheduled.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }),
-    timeLabel:
-      h.status === "COMPLETED"
-        ? "Ended"
-        : h.status === "CANCELLED"
-          ? "Cancelled"
-          : diffMin <= 0
-            ? "Now"
-            : diffMin < 60
-              ? `in ${diffMin} min`
-              : scheduled.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }),
+    timeLabel: (() => {
+      if (h.status === "COMPLETED") return "Ended";
+      if (h.status === "CANCELLED") return "Cancelled";
+      if (diffMin <= 0) return "Now";
+      if (diffMin < 60) return `in ${diffMin} min`;
+      const now = new Date();
+      const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startThat = new Date(
+        scheduled.getFullYear(),
+        scheduled.getMonth(),
+        scheduled.getDate()
+      );
+      const dayDiff = Math.round(
+        (startThat.getTime() - startToday.getTime()) / 86400000
+      );
+      const clock = scheduled.toLocaleTimeString("en-IN", {
+        hour: "numeric",
+        minute: "2-digit",
+      });
+      if (dayDiff === 0) return `Today · ${clock}`;
+      if (dayDiff === 1) return `Tomorrow · ${clock}`;
+      return `${scheduled.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+      })} · ${clock}`;
+    })(),
     maxParticipants: h.maxParticipants,
     going: accepted.length,
     status: h.status,
@@ -138,6 +154,8 @@ function formatPlan(
       name: p.user.name,
       avatarUrl: p.user.profile?.avatarUrl,
       status: "PENDING",
+      /** While PENDING, rejectRemark stores the joiner's note */
+      remark: p.rejectRemark || null,
     })),
     myParticipationStatus: undefined as string | undefined,
   };
