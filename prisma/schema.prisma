@@ -63,7 +63,8 @@ model User {
   email         String        @unique
   passwordHash  String
   name          String
-  phone         String?
+  phone         String?       @unique
+  firebaseUid   String?       @unique
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   profile       Profile?
