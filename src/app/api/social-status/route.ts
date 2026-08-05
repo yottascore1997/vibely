@@ -43,14 +43,22 @@ export async function POST(request: NextRequest) {
   const userId = auth.userId;
 
   const body = await request.json();
-  const { energy, freeNow, freeUntil, activityName, timeLabel } = body;
+  const energy = body.energy as string | undefined;
+  const freeNow = body.freeNow as boolean | undefined;
+  const freeUntil = body.freeUntil as string | undefined;
+  // Accept both activityName and legacy `activity` from Spot screens
+  const activityName = (body.activityName || body.activity) as string | undefined;
+  const timeLabel = body.timeLabel as string | undefined;
+  const notifyMatches = body.notifyMatches !== false;
 
   try {
+    const prev = await prisma.socialStatus.findUnique({ where: { userId } });
+
     const status = await prisma.socialStatus.upsert({
       where: { userId },
       update: {
         energy: energy || "LESSGO",
-        freeNow: freeNow ?? (energy === "LESSGO"),
+        freeNow: freeNow ?? energy === "LESSGO",
         freeUntil: freeUntil ? new Date(freeUntil) : null,
         activityName: activityName ?? undefined,
         timeLabel: timeLabel ?? undefined,
@@ -58,7 +66,7 @@ export async function POST(request: NextRequest) {
       create: {
         userId,
         energy: energy || "LESSGO",
-        freeNow: freeNow ?? (energy === "LESSGO"),
+        freeNow: freeNow ?? energy === "LESSGO",
         freeUntil: freeUntil ? new Date(freeUntil) : null,
         activityName: activityName || null,
         timeLabel: timeLabel || null,
@@ -67,6 +75,37 @@ export async function POST(request: NextRequest) {
         user: { include: { profile: true } },
       },
     });
+
+    const becameLessgo =
+      (energy === "LESSGO" || status.energy === "LESSGO") &&
+      status.freeNow &&
+      prev?.energy !== "LESSGO";
+
+    if (notifyMatches && becameLessgo) {
+      const me = status.user;
+      const matches = await prisma.match.findMany({
+        where: { OR: [{ user1Id: userId }, { user2Id: userId }] },
+        take: 40,
+      });
+      const otherIds = matches
+        .map((m) => (m.user1Id === userId ? m.user2Id : m.user1Id))
+        .filter(Boolean);
+
+      if (otherIds.length > 0) {
+        const label =
+          activityName ||
+          status.activityName ||
+          "free to hang";
+        await prisma.notification.createMany({
+          data: otherIds.map((oid) => ({
+            userId: oid,
+            title: `${me.name.split(" ")[0]} is Lessgo ⚡`,
+            message: `${me.name.split(" ")[0]} is ${label}. Ping them for a hang!`,
+            type: "ENERGY_LESSGO",
+          })),
+        });
+      }
+    }
 
     return success(status);
   } catch (err) {
