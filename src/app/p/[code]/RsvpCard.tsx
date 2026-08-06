@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import InviteHeroVideo from "./InviteHeroVideo";
 
 interface Props {
   inviteCode: string;
   senderName: string;
   initialStatus: string;
   initialInviteeName?: string;
+  activityEmoji?: string;
+  activityName?: string;
+  timeLabel?: string;
+  onAccepted?: () => void;
+  /** Parent already shows rec/acc hero video */
+  hideHeroVideo?: boolean;
 }
 
 export default function RsvpCard({
@@ -14,6 +21,11 @@ export default function RsvpCard({
   senderName,
   initialStatus,
   initialInviteeName,
+  activityEmoji,
+  activityName,
+  timeLabel,
+  onAccepted,
+  hideHeroVideo,
 }: Props) {
   const [name, setName] = useState(initialInviteeName || "");
   const [phone, setPhone] = useState("");
@@ -55,12 +67,13 @@ export default function RsvpCard({
         if (!name.trim()) setName(finalName);
         setRsvpStatus(status);
         if (status === "accepted") {
+          onAccepted?.();
           setAddedToPlan(Boolean(payload?.addedToPlan));
           if (payload?.addedToPlan) {
             setSyncNote(
               payload?.alreadyMember
-                ? "You're already on the host's plan & VibeSplit."
-                : "You've been added to the host's group chat & VibeSplit."
+                ? "You're already on the host's plan."
+                : "You've been added to the host's hangout."
             );
           } else {
             setSyncNote(
@@ -86,7 +99,6 @@ export default function RsvpCard({
     }
   };
 
-  // If guest already said I'm Coming earlier (before fix), re-sync onto plan
   useEffect(() => {
     if (initialStatus === "accepted") {
       submitRsvp("accepted", {
@@ -104,34 +116,36 @@ export default function RsvpCard({
   if (rsvpStatus) {
     const displayName = name.trim() || initialInviteeName || "friend";
     return (
-      <div className="text-center space-y-4 py-4 animate-fade-in">
+      <div className="text-center space-y-4 animate-fade-in">
         {rsvpStatus === "accepted" ? (
-          <div className="p-5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-2">
-            <div className="text-4xl">🎉</div>
-            <h4 className="text-lg font-bold text-emerald-400">RSVP Confirmed!</h4>
-            <p className="text-sm text-gray-300">
-              Awesome {displayName}! {senderName} has been notified that you are coming.
-            </p>
-            {syncNote ? (
-              <p
-                className={`text-xs font-semibold ${
-                  addedToPlan ? "text-emerald-300" : "text-amber-300"
-                }`}
-              >
-                {syncNote}
+          <>
+            {!hideHeroVideo ? <InviteHeroVideo mode="acc" /> : null}
+            <div className="p-5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-2">
+              <h4 className="text-lg font-bold text-emerald-400">RSVP Confirmed!</h4>
+              <p className="text-sm text-gray-300">
+                Awesome {displayName}! {senderName} has been notified that you are coming.
               </p>
-            ) : null}
-            {addedToPlan === false ? (
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => handleRSVP("accepted")}
-                className="mt-2 px-4 py-2 rounded-xl bg-white/10 text-sm font-bold text-white border border-white/15"
-              >
-                {submitting ? "Syncing…" : "Retry add to plan"}
-              </button>
-            ) : null}
-          </div>
+              {syncNote ? (
+                <p
+                  className={`text-xs font-semibold ${
+                    addedToPlan ? "text-emerald-300" : "text-amber-300"
+                  }`}
+                >
+                  {syncNote}
+                </p>
+              ) : null}
+              {addedToPlan === false ? (
+                <button
+                  type="button"
+                  disabled={submitting}
+                  onClick={() => handleRSVP("accepted")}
+                  className="mt-2 px-4 py-2 rounded-xl bg-white/10 text-sm font-bold text-white border border-white/15"
+                >
+                  {submitting ? "Syncing…" : "Retry add to plan"}
+                </button>
+              ) : null}
+            </div>
+          </>
         ) : (
           <div className="p-5 bg-rose-500/10 border border-rose-500/30 rounded-2xl space-y-2">
             <div className="text-4xl">😌</div>

@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import RsvpCard from "./RsvpCard";
-import OpenInAppButton from "./OpenInAppButton";
+import InvitePageClient from "./InvitePageClient";
 
 export const dynamic = "force-dynamic";
 
@@ -70,56 +69,17 @@ export default async function InviteLandingPage({
       </header>
 
       <main className="w-full max-w-md my-auto z-10">
-        <div className="bg-[#161622]/90 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl space-y-6 relative overflow-hidden">
-          <div className="flex items-center gap-4 border-b border-white/10 pb-5">
-            <div className="relative">
-              <img
-                src={senderAvatar}
-                alt={senderName}
-                className="w-16 h-16 rounded-full object-cover border-2 border-[#8A56FF] shadow-lg"
-              />
-              <div className="absolute -bottom-1 -right-1 bg-[#22C55E] text-black text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow">
-                Host
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">You are invited by</p>
-              <h2 className="text-2xl font-black text-white">{senderName}</h2>
-              <p className="text-xs text-purple-300 font-medium">📍 {senderCity}</p>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-r from-[#8A56FF]/15 to-[#FF4B81]/15 border border-[#8A56FF]/30 rounded-2xl p-5 text-center relative">
-            <div className="text-5xl mb-2 animate-bounce">{invite.activityEmoji}</div>
-            <h3 className="text-xl font-extrabold text-white capitalize tracking-wide">
-              {invite.activityName} Hangout
-            </h3>
-            <p className="text-sm font-semibold text-purple-200 mt-1">
-              ⏰ {invite.timeLabel || "Soon"}
-            </p>
-          </div>
-
-          <OpenInAppButton
-            inviteCode={code}
-            activityEmoji={invite.activityEmoji}
-            activityName={invite.activityName}
-          />
-
-          <div className="relative flex items-center gap-3">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-              or RSVP here
-            </span>
-            <div className="flex-1 h-px bg-white/10" />
-          </div>
-
-          <RsvpCard
-            inviteCode={code}
-            senderName={senderName}
-            initialStatus={invite.status.toLowerCase()}
-            initialInviteeName={invite.inviteeName || undefined}
-          />
-        </div>
+        <InvitePageClient
+          inviteCode={code}
+          senderName={senderName}
+          senderAvatar={senderAvatar}
+          senderCity={senderCity}
+          activityEmoji={invite.activityEmoji}
+          activityName={invite.activityName}
+          timeLabel={invite.timeLabel || "Soon"}
+          initialStatus={invite.status.toLowerCase()}
+          initialInviteeName={invite.inviteeName || undefined}
+        />
       </main>
 
       <footer className="w-full max-w-md py-4 text-center text-xs text-gray-500 z-10">
