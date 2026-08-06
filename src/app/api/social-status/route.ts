@@ -1,7 +1,17 @@
 import { NextRequest } from "next/server";
+import { SocialEnergy } from "@prisma/client";
 import { success, error } from "@/lib/api-response";
 import { getAuthUser, unauthorized } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+
+const ENERGY_VALUES = new Set<string>(Object.values(SocialEnergy));
+
+function parseEnergy(raw: unknown): SocialEnergy {
+  if (typeof raw === "string" && ENERGY_VALUES.has(raw)) {
+    return raw as SocialEnergy;
+  }
+  return SocialEnergy.LESSGO;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,7 +53,7 @@ export async function POST(request: NextRequest) {
   const userId = auth.userId;
 
   const body = await request.json();
-  const energy = body.energy as string | undefined;
+  const energy = parseEnergy(body.energy);
   const freeNow = body.freeNow as boolean | undefined;
   const freeUntil = body.freeUntil as string | undefined;
   // Accept both activityName and legacy `activity` from Spot screens
@@ -57,16 +67,16 @@ export async function POST(request: NextRequest) {
     const status = await prisma.socialStatus.upsert({
       where: { userId },
       update: {
-        energy: energy || "LESSGO",
-        freeNow: freeNow ?? energy === "LESSGO",
+        energy,
+        freeNow: freeNow ?? energy === SocialEnergy.LESSGO,
         freeUntil: freeUntil ? new Date(freeUntil) : null,
         activityName: activityName ?? undefined,
         timeLabel: timeLabel ?? undefined,
       },
       create: {
         userId,
-        energy: energy || "LESSGO",
-        freeNow: freeNow ?? energy === "LESSGO",
+        energy,
+        freeNow: freeNow ?? energy === SocialEnergy.LESSGO,
         freeUntil: freeUntil ? new Date(freeUntil) : null,
         activityName: activityName || null,
         timeLabel: timeLabel || null,
@@ -77,9 +87,9 @@ export async function POST(request: NextRequest) {
     });
 
     const becameLessgo =
-      (energy === "LESSGO" || status.energy === "LESSGO") &&
+      energy === SocialEnergy.LESSGO &&
       status.freeNow &&
-      prev?.energy !== "LESSGO";
+      prev?.energy !== SocialEnergy.LESSGO;
 
     if (notifyMatches && becameLessgo) {
       const me = status.user;
