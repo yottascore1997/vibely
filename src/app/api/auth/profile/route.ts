@@ -42,7 +42,12 @@ export async function POST(request: NextRequest) {
       firstName: body.firstName || undefined,
       bio: body.bio || undefined,
       dateOfBirth: dob || undefined,
-      age: dob ? calcAge(dob) : undefined,
+      age:
+        dob
+          ? calcAge(dob)
+          : body.age != null && Number.isFinite(Number(body.age))
+            ? Math.max(18, Math.min(99, Number(body.age)))
+            : undefined,
       gender: GENDERS.has(genderRaw) ? genderRaw : undefined,
       interestedIn: INTERESTED.has(interestedRaw) ? interestedRaw : undefined,
       pronouns: body.pronouns || undefined,
