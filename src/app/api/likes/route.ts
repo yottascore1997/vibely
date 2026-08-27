@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       select: { city: true, latitude: true, longitude: true },
     });
 
-    const [incoming, mySwipes] = await Promise.all([
+    const [incoming, mySwipes, blocks] = await Promise.all([
       prisma.swipe.findMany({
         where: {
           receiverId: userId,
@@ -39,6 +39,12 @@ export async function GET(request: NextRequest) {
         where: { senderId: userId },
         select: { receiverId: true },
       }),
+      prisma.block.findMany({
+        where: {
+          OR: [{ blockerId: userId }, { blockedId: userId }],
+        },
+        select: { blockerId: true, blockedId: true },
+      }),
     ]);
 
     type IncomingLike = {
@@ -55,6 +61,7 @@ export async function GET(request: NextRequest) {
           longitude: number | null;
           isVerified: boolean;
           isOnline: boolean;
+          isPaused?: boolean;
           avatarUrl: string | null;
           photos: { url: string }[];
         } | null;
@@ -62,9 +69,18 @@ export async function GET(request: NextRequest) {
     };
 
     const swipedSet = new Set(mySwipes.map((s: { receiverId: string }) => s.receiverId));
+    const blockedSet = new Set(
+      blocks.map((b) => (b.blockerId === userId ? b.blockedId : b.blockerId))
+    );
 
     const list = incoming
-      .filter((s: IncomingLike) => !swipedSet.has(s.senderId) && s.sender.profile)
+      .filter(
+        (s: IncomingLike) =>
+          !swipedSet.has(s.senderId) &&
+          !blockedSet.has(s.senderId) &&
+          s.sender.profile &&
+          !s.sender.profile.isPaused
+      )
       .map((s: IncomingLike) => {
         const p = s.sender.profile!;
         return {

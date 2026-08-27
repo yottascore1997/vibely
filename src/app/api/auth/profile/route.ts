@@ -75,6 +75,8 @@ export async function POST(request: NextRequest) {
           : undefined,
       avatarUrl: body.avatarUrl || undefined,
       city: body.city || undefined,
+      isPaused:
+        typeof body.isPaused === "boolean" ? body.isPaused : undefined,
       latitude:
         body.latitude != null && Number.isFinite(Number(body.latitude))
           ? Number(body.latitude)

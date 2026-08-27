@@ -201,7 +201,19 @@ export async function GET(request: NextRequest) {
         m.user1Id === userId ? m.user2Id : m.user1Id
       );
 
-      excludeIds = [...new Set([userId, ...swipedIds, ...matchedIds])];
+      const blocks = await prisma.block.findMany({
+        where: {
+          OR: [{ blockerId: userId }, { blockedId: userId }],
+        },
+        select: { blockerId: true, blockedId: true },
+      });
+      const blockedIds = blocks.map((b) =>
+        b.blockerId === userId ? b.blockedId : b.blockerId
+      );
+
+      excludeIds = [
+        ...new Set([userId, ...swipedIds, ...matchedIds, ...blockedIds]),
+      ];
     }
 
     // lookingFor is JSON-stringified array — do NOT include null (was dumping unset into both modes)
@@ -249,6 +261,7 @@ export async function GET(request: NextRequest) {
 
     const baseWhere = {
       userId: { notIn: excludeIds },
+      isPaused: false,
       ...(!hasMyGps && myCity && !nearbyMode ? { city: myCity } : {}),
       ...(!nearbyMode ? genderFilter : {}),
       AND: andClause,
@@ -284,6 +297,7 @@ export async function GET(request: NextRequest) {
       const nearby = await prisma.profile.findMany({
         where: {
           userId: { notIn: excludeIds },
+          isPaused: false,
           latitude: { not: null },
           longitude: { not: null },
           ...(!nearbyMode ? genderFilter : {}),
@@ -310,6 +324,7 @@ export async function GET(request: NextRequest) {
       const soft = await prisma.profile.findMany({
         where: {
           userId: { notIn: excludeIds },
+          isPaused: false,
           latitude: { not: null },
           longitude: { not: null },
           ...genderFilter,

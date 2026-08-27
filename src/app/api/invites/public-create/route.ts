@@ -68,31 +68,19 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const publicWeb = (
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.APP_URL ||
-      "https://www.hangora.app"
-    ).replace(/\/+$/, "");
-
-    // Prefer public Hangora domain so WhatsApp links always open the RSVP page
-    let inviteUrl = `${publicWeb}/p/${invite.inviteCode}`;
-    const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
-    if (/hangora\.app/i.test(host) && !/railway|localhost|127\.0\.0\.1/i.test(host)) {
-      const protocol =
-        host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https";
-      inviteUrl = `${protocol}://${host.split(",")[0].trim()}/p/${invite.inviteCode}`;
-    }
+    // Always use public Hangora RSVP URL (never bare homepage / railway host)
+    const inviteUrl = `https://www.hangora.app/p/${invite.inviteCode}`;
 
     const senderName = sender.profile?.firstName || sender.name || "A friend";
     const first = senderName.split(" ")[0] || "A friend";
-    const place = ""; // location optional on this endpoint
     const shareMessage =
       `Hey! 👋\n\n` +
       `✨ *You're invited on Hangora*\n\n` +
       `${activityEmoji} *${activityName} Hangout*\n` +
-      `🕐 ${timeLabel}${place}\n\n` +
+      `🕐 ${timeLabel}\n\n` +
       `${first} wants you to join this hang.\n\n` +
-      `👉 Tap to view details & RSVP:\n${inviteUrl}\n\n` +
+      `👉 *Tap to open invite & RSVP* (works in browser even without the app):\n` +
+      `${inviteUrl}\n\n` +
       `See you there 💫`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
 

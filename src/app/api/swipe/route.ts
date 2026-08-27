@@ -20,6 +20,22 @@ export async function POST(request: NextRequest) {
   if (senderId === receiverId) return error("Cannot swipe on yourself");
 
   try {
+    const blocked = await prisma.block.findFirst({
+      where: {
+        OR: [
+          { blockerId: senderId, blockedId: receiverId },
+          { blockerId: receiverId, blockedId: senderId },
+        ],
+      },
+    });
+    if (blocked) return error("Cannot interact with this user", 403);
+
+    const targetProfile = await prisma.profile.findUnique({
+      where: { userId: receiverId },
+      select: { isPaused: true },
+    });
+    if (targetProfile?.isPaused) return error("This profile is paused", 403);
+
     const swipe = await prisma.swipe.upsert({
       where: { senderId_receiverId: { senderId, receiverId } },
       update: { action },

@@ -5,17 +5,20 @@ import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
 
-/** Hardcoded demo login — only this number + OTP work here */
-const DUMMY_PHONE_DIGITS = "9420413822";
-const DUMMY_OTP = "123456";
-const DUMMY_FIREBASE_UID = "dummy_9420413822";
+/**
+ * TEMP (pre-prod): any valid Indian mobile + OTP 123456 → login/register.
+ * Firebase SMS is disabled on the app until production.
+ * When going live: remove/restrict this route and turn Firebase OTP back on.
+ */
+const DEV_OTP = "123456";
 
 function cleanDigits(phone: string) {
   return phone.replace(/[^\d]/g, "");
 }
 
 function toE164Like(digits: string) {
-  if (digits.length === 10) return `+91${digits}`;
+  const last10 = digits.slice(-10);
+  if (last10.length === 10) return `+91${last10}`;
   if (digits.startsWith("91") && digits.length === 12) return `+${digits}`;
   if (digits.startsWith("+")) return digits;
   return `+${digits}`;
@@ -28,7 +31,6 @@ export async function OPTIONS() {
 /**
  * POST /api/auth/dev-otp
  * Body: { phone: string, otp: string }
- * Dummy login for one fixed test number (no Firebase SMS).
  */
 export async function POST(request: Request) {
   try {
@@ -43,25 +45,35 @@ export async function POST(request: Request) {
     const digits = cleanDigits(phoneRaw);
     const last10 = digits.slice(-10);
 
-    if (last10 !== DUMMY_PHONE_DIGITS || otp !== DUMMY_OTP) {
-      return error("Invalid demo credentials", 401);
+    if (last10.length !== 10) {
+      return error("Enter a valid 10-digit mobile number", 400);
+    }
+
+    if (otp !== DEV_OTP) {
+      return error("Invalid OTP. Use 123456 for now.", 401);
     }
 
     const phone = toE164Like(last10);
+    const firebaseUid = `dev_${last10}`;
 
     let user = await prisma.user.findFirst({
       where: {
         OR: [
           { phone },
           { phone: last10 },
+          { phone: `+91${last10}` },
           { email: `phone_${last10}@hangora.auth` },
           { email: `phone_${last10}_dummy@hangora.auth` },
+          { firebaseUid },
         ],
       },
       include: { profile: true },
     });
 
+    let isNewUser = false;
+
     if (!user) {
+      isNewUser = true;
       const email = `phone_${last10}@hangora.auth`;
       const existingEmail = await prisma.user.findUnique({ where: { email } });
       const finalEmail = existingEmail
@@ -76,21 +88,20 @@ export async function POST(request: Request) {
           data: {
             email: finalEmail,
             passwordHash,
-            name: `Demo ${last10.slice(-4)}`,
+            name: `User ${last10.slice(-4)}`,
             phone,
-            firebaseUid: DUMMY_FIREBASE_UID,
+            firebaseUid,
             profile: { create: {} },
           },
           include: { profile: true },
         });
       } catch (createErr) {
-        // Production DB may not have firebaseUid column yet
         console.warn("Dev OTP create with firebaseUid failed, retrying without:", createErr);
         user = await prisma.user.create({
           data: {
             email: finalEmail,
             passwordHash,
-            name: `Demo ${last10.slice(-4)}`,
+            name: `User ${last10.slice(-4)}`,
             phone,
             profile: { create: {} },
           },
@@ -103,7 +114,7 @@ export async function POST(request: Request) {
           where: { id: user.id },
           data: {
             phone: user.phone || phone,
-            firebaseUid: (user as any).firebaseUid || DUMMY_FIREBASE_UID,
+            firebaseUid: (user as any).firebaseUid || firebaseUid,
           },
           include: { profile: true },
         });
@@ -127,12 +138,13 @@ export async function POST(request: Request) {
         phone: user.phone,
         onboardingDone: user.profile?.onboardingDone ?? false,
       },
-      isNewUser: !user.profile?.onboardingDone,
+      isNewUser: isNewUser || !user.profile?.onboardingDone,
       dummy: true,
+      note: "TEMP auth: OTP 123456 for all numbers. Switch to Firebase before production.",
     });
   } catch (err) {
     console.error("Dev OTP auth error:", err);
     const msg = err instanceof Error ? err.message : String(err);
-    return error(`Demo login failed: ${msg}`, 500);
+    return error(`Login failed: ${msg}`, 500);
   }
 }
