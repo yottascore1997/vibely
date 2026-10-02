@@ -379,6 +379,33 @@ export async function POST(request: NextRequest) {
       isPrivate === true || visibility === "FRIENDS" || visibility === "FRIENDS_ONLY";
     const visibilityStr = isPrivateBool ? "FRIENDS" : "PUBLIC";
 
+    // ── Check Daily Hangout Limit for Free Users (Max 3/day) ──
+    const creatorProfile = await prisma.profile.findUnique({
+      where: { userId: creatorId },
+      select: { isPremium: true },
+    });
+
+    const isPremiumUser = creatorProfile?.isPremium === true;
+
+    if (!isPremiumUser) {
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+
+      const todayHangoutsCount = await prisma.hangout.count({
+        where: {
+          creatorId,
+          createdAt: { gte: startOfToday },
+        },
+      });
+
+      if (todayHangoutsCount >= 3) {
+        return error(
+          "Daily limit reached. Free users can create up to 3 hangouts per day. Upgrade to Premium for unlimited hangouts!",
+          403
+        );
+      }
+    }
+
     let activityId: string | undefined;
     if (activity) {
       const act = await prisma.activity.upsert({
