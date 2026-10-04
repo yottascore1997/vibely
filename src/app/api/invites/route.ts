@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { success, error } from "@/lib/api-response";
 import { getAuthUser, unauthorized } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { emitChatEvent } from "@/lib/chat-emit";
 
 export const dynamic = "force-dynamic";
 
@@ -179,6 +180,56 @@ export async function POST(request: NextRequest) {
       });
     } catch {
       /* soft fail */
+    }
+
+    // Real-time socket emission to receiver's private room
+    try {
+      await emitChatEvent("hangout:invite", receiverId, {
+        id: invite.id,
+        inviteId: invite.id,
+        senderId: sender.id,
+        senderName: sender.name,
+        senderAvatar: sender.profile?.avatarUrl || null,
+        activityName: invite.activityName,
+        activityEmoji: invite.activityEmoji,
+        category: (invite.activityName || "chai").toLowerCase(),
+        location: "CHAYOS, GALLERIA",
+        time: invite.timeLabel || "6 PM TODAY",
+        timeLabel: invite.timeLabel,
+        hangoutId: invite.hangoutId || null,
+      });
+
+      await emitChatEvent("notification:new", receiverId, {
+        id: `notif-${invite.id}`,
+        type: "invite",
+        titleUser: sender.name,
+        titleAction: "invited you for",
+        titleHighlight: invite.activityName,
+        subtitle: `now · ${invite.timeLabel}`,
+        category: (invite.activityName || "chai").toLowerCase(),
+        user: {
+          name: sender.name,
+          avatar: sender.profile?.avatarUrl,
+          badgeIcon: "people",
+          badgeColor: "#22C55E",
+        },
+        isHighlighted: true,
+        highlightColor: "#22C55E",
+        isRead: false,
+        buttonText: "Open",
+        route: "/hangout",
+        hangoutTitle: `Down for ${invite.activityEmoji} ${invite.activityName}?`,
+        inviteData: {
+          planId: invite.id,
+          senderName: sender.name,
+          senderAvatar: sender.profile?.avatarUrl,
+          category: (invite.activityName || "chai").toLowerCase(),
+          location: "CHAYOS, GALLERIA",
+          time: invite.timeLabel || "6 PM TODAY",
+        },
+      });
+    } catch (e) {
+      console.warn("[POST /api/invites] socket emit warning:", e);
     }
 
     return success({

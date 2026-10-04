@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { success, error } from "@/lib/api-response";
 import { getAuthUser, unauthorized } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { emitChatEvent } from "@/lib/chat-emit";
 
 export const dynamic = "force-dynamic";
 
@@ -166,6 +167,25 @@ export async function POST(request: NextRequest) {
         "INVITE_COUNTER"
       );
 
+      try {
+        await emitChatEvent("hangout:invite", existing.senderId, {
+          id: counterInvite.id,
+          inviteId: counterInvite.id,
+          senderId: userId,
+          senderName: counterInvite.sender.name,
+          senderAvatar: counterInvite.sender.profile?.avatarUrl,
+          activityName: counterInvite.activityName,
+          activityEmoji: counterInvite.activityEmoji,
+          category: (counterInvite.activityName || "chai").toLowerCase(),
+          location: "GALLERIA",
+          time: counterInvite.timeLabel,
+          timeLabel: counterInvite.timeLabel,
+          isCounter: true,
+        });
+      } catch (e) {
+        console.warn("[POST /invites/respond] counter emit warning:", e);
+      }
+
       return success({
         id: updated.id,
         status: "countered",
@@ -256,6 +276,39 @@ export async function POST(request: NextRequest) {
         joinNote ? `${base}\n“${joinNote}”` : base,
         "INVITE_ACCEPTED"
       );
+
+      try {
+        await emitChatEvent("hangout:accepted", existing.senderId, {
+          inviteId,
+          receiverName: who,
+          receiverAvatar: existing.receiver?.profile?.avatarUrl,
+          activityName: finalActivityName,
+          activityEmoji: finalActivityEmoji,
+          hangoutId,
+          scheduledAt,
+        });
+
+        await emitChatEvent("notification:new", existing.senderId, {
+          id: `notif-acc-${inviteId}`,
+          type: "reaction",
+          titleUser: who,
+          titleAction: "joined your",
+          titleHighlight: finalActivityName,
+          subtitle: "just now",
+          user: {
+            name: who,
+            avatar: existing.receiver?.profile?.avatarUrl,
+            badgeIcon: "checkmark-circle",
+            badgeColor: "#22C55E",
+          },
+          isHighlighted: true,
+          highlightColor: "#22C55E",
+          isRead: false,
+          route: `/plan-details?id=${hangoutId}`,
+        });
+      } catch (e) {
+        console.warn("[POST /invites/respond] accept emit warning:", e);
+      }
     } else {
       const otherId =
         userId === existing.senderId

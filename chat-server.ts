@@ -233,7 +233,23 @@ io.on("connection", (socket) => {
           });
 
           if (!hangout) {
-            console.warn(`[ChatServer] Hangout ${matchId} not found`);
+            // Support custom groups or broadcast rooms
+            const senderUser = await prisma.user.findUnique({
+              where: { id: senderId },
+              include: { profile: { select: { avatarUrl: true } } },
+            });
+            payload = {
+              id: "msg-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7),
+              text: content,
+              sentAt: new Date().toISOString(),
+              senderId,
+              senderName: senderUser?.name || "Friend",
+              senderAvatar: senderUser?.profile?.avatarUrl || null,
+              matchId,
+              isGroup: true,
+              isRead: false,
+            };
+            io.to(matchId).emit("new_message", payload);
             return;
           }
 
@@ -422,11 +438,13 @@ io.on("connection", (socket) => {
       try {
         if (isGroup) {
           const existing = await prisma.groupMessage.findUnique({ where: { id: messageId } });
-          if (!existing || existing.senderId !== userId) return;
-          await prisma.groupMessage.update({
-            where: { id: messageId },
-            data: { content: "[DELETED]" },
-          });
+          if (existing) {
+            if (existing.senderId !== userId) return;
+            await prisma.groupMessage.update({
+              where: { id: messageId },
+              data: { content: "[DELETED]" },
+            });
+          }
           io.to(matchId).emit("message_deleted", {
             id: messageId,
             matchId,
@@ -470,16 +488,17 @@ io.on("connection", (socket) => {
       try {
         if (isGroup) {
           const existing = await prisma.groupMessage.findUnique({ where: { id: messageId } });
-          if (!existing || existing.senderId !== userId) return;
-
-          const msg = await prisma.groupMessage.update({
-            where: { id: messageId },
-            data: { content: newContent },
-          });
+          if (existing) {
+            if (existing.senderId !== userId) return;
+            await prisma.groupMessage.update({
+              where: { id: messageId },
+              data: { content: newContent },
+            });
+          }
           io.to(matchId).emit("message_updated", {
-            id: msg.id,
-            text: msg.content,
-            matchId: msg.hangoutId,
+            id: messageId,
+            text: newContent,
+            matchId,
             senderId: userId,
             isGroup: true,
           });
